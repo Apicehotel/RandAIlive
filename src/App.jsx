@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase.js'
 import { zoneFor, WORLD_ZONES } from './behavior-engine.js'
+import { MaintenanceClient, MaintenancePanel, useMaintenanceClients } from './maintenance-clients.jsx'
 
 const STALE_MS=5*60*1000
 const AGENTS=[
@@ -28,7 +29,8 @@ function Bot({agent,focused,onFocus}){
 }
 
 export default function App(){
- const [rows,setRows]=useState([]),[now,setNow]=useState(Date.now()),[error,setError]=useState(''),[focus,setFocus]=useState(null),[director,setDirector]=useState(true)
+ const [rows,setRows]=useState([]),[now,setNow]=useState(Date.now()),[error,setError]=useState(''),[focus,setFocus]=useState(null),[director,setDirector]=useState(true),[selectedIssue,setSelectedIssue]=useState(null)
+ const issues=useMaintenanceClients()
  useEffect(()=>{
   const tick=window.setInterval(()=>setNow(Date.now()),1000)
   if(!supabase)return()=>window.clearInterval(tick)
@@ -44,7 +46,7 @@ export default function App(){
  const mission=agents.find(a=>a.status==='ERROR')||agents.find(a=>a.status==='RUNNING')||agents.find(a=>a.status==='WAITING_APPROVAL')||null
  const encounters=useMemo(()=>{const groups=new Map();for(const a of agents){const k=a.life.id;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(a)}return [...groups.values()].filter(g=>g.length>1)},[agents])
  return <main className="app">
-  <header className="topbar"><div className="brand"><span className="logo">R</span><div><strong>RandAILive</strong><small>THE LIVING AI HOTEL</small></div><em>LIVE</em></div><div className="metrics"><span><b>{counts.RUNNING||0}</b> missioni</span><span><b>{encounters.length}</b> incontri</span><span><b>{counts.ERROR||0}</b> allarmi</span><button onClick={()=>setDirector(v=>!v)}>{director?'Regia ON':'Regia OFF'}</button></div></header>
+  <header className="topbar"><div className="brand"><span className="logo">R</span><div><strong>RandAILive</strong><small>THE LIVING AI HOTEL</small></div><em>LIVE</em></div><div className="metrics"><span><b>{counts.RUNNING||0}</b> missioni</span><span><b>{issues.length}</b> clienti</span><span><b>{encounters.length}</b> incontri</span><span><b>{counts.ERROR||0}</b> allarmi</span><button onClick={()=>setDirector(v=>!v)}>{director?'Regia ON':'Regia OFF'}</button></div></header>
   {!supabase&&<div className="config-banner">Modalità demo comportamentale: collega Supabase per usare gli heartbeat reali.</div>}
   {mission&&<div className={`mission mission--${mission.status.toLowerCase()}`}><span>MISSION LIVE</span><strong>{mission.name}</strong><p>{mission.activity||mission.detail||label(mission.status)}</p></div>}
   <section className="layout">
@@ -56,6 +58,7 @@ export default function App(){
      <div className="knowledge">KNOWLEDGE</div><div className="ops">OPS</div><div className="radar"><i/></div><div className="hub"><strong>RandApp Hub</strong><small>REAL-TIME ECOSYSTEM</small></div>
      <div className="floor-lines"/><div className="plant plant-a">♣</div><div className="plant plant-b">♣</div><div className="lounge"><i/><i/><i/></div><div className="coffee">☕ COFFEE</div>
      {Object.values(WORLD_ZONES).map(z=><span className="zone-label" key={z.id} style={{left:`${z.x}%`,top:`${z.y}%`}}>{z.label}</span>)}
+     {issues.map((issue,index)=><MaintenanceClient key={issue.id} issue={issue} index={index} onSelect={setSelectedIssue}/>)}
      {agents.map(a=><Bot key={a.id} agent={a} focused={focus===a.id} onFocus={setFocus}/>)}
      {encounters.map((group,i)=><div key={i} className="encounter" style={{left:`${group[0].life.x}%`,top:`${group[0].life.y-7}%`}}>💬 {group.map(a=>a.name).join(' + ')}</div>)}
     </div>
@@ -65,6 +68,7 @@ export default function App(){
     <section className="panel"><header><strong>Regia</strong><span>{selected?'FOLLOW':'FREE CAM'}</span></header>{selected?<div className="profile"><div className="profile-icon" style={{'--tone':selected.tone}}>{selected.glyph}</div><h2>{selected.name}</h2><p>{selected.life.action}</p><small>{selected.life.label}</small><b>{label(selected.status)}</b><button onClick={()=>setFocus(null)}>Smetti di seguire</button></div>:<p className="empty">Tocca un agente nella hall.</p>}</section>
     <section className="panel"><header><strong>Vita nella hall</strong><span>12s CYCLE</span></header>{agents.map(a=><button className="life-row" key={a.id} onClick={()=>setFocus(a.id)}><i style={{background:a.tone}}/><span><b>{a.name}</b><small>{a.life.action}</small></span><em>{a.life.label}</em></button>)}</section>
     <section className="panel"><header><strong>Incontri</strong><span>{encounters.length}</span></header>{encounters.length?encounters.map((g,i)=><div className="event" key={i}><div><b>{g.map(a=>a.name).join(' + ')}</b><p>si sono incontrati in {g[0].life.label}</p></div></div>):<p className="empty">Nessun incontro in questo momento.</p>}</section>
+    <MaintenancePanel issues={issues} selected={selectedIssue} onSelect={setSelectedIssue}/>
     {error&&<div className="error">{error}</div>}
    </aside>
   </section>
