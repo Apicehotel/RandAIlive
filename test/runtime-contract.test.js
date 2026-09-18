@@ -29,3 +29,12 @@ test('pending maintenance issues become live client NPCs', () => {
   assert.match(app, /MaintenanceClient/)
   assert.match(app, /MaintenancePanel/)
 })
+
+test('boot path is visible and React errors are not silent', () => {
+  const main = fs.readFileSync('src/main.jsx', 'utf8')
+  const html = fs.readFileSync('index.html', 'utf8')
+  const vite = fs.readFileSync('vite.config.js', 'utf8')
+  assert.match(main, /ErrorBoundary/)
+  assert.match(html, /Avvio RandAILive/)
+  assert.match(vite, /@vitejs\/plugin-react/)
+})
