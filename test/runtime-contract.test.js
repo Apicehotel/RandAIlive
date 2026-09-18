@@ -18,3 +18,14 @@ test('all canonical runtime agents are represented', () => {
     assert.match(src, new RegExp(id))
   }
 })
+
+test('pending maintenance issues become live client NPCs', () => {
+  const clients = fs.readFileSync('src/maintenance-clients.jsx', 'utf8')
+  const app = fs.readFileSync('src/App.jsx', 'utf8')
+  assert.match(clients, /from\('segnalazioni'\)/)
+  assert.match(clients, /neq\('stato','done'\)/)
+  assert.match(clients, /randailive-maintenance-clients/)
+  assert.match(clients, /postgres_changes/)
+  assert.match(app, /MaintenanceClient/)
+  assert.match(app, /MaintenancePanel/)
+})
