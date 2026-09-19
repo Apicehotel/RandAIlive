@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import { createGameState, performAction } from '../src/game-engine.js'
 
 test('live world uses real runtime table and realtime subscription', () => {
   const src = fs.readFileSync('src/App.jsx', 'utf8')
@@ -37,4 +38,14 @@ test('boot path is visible and React errors are not silent', () => {
   assert.match(main, /ErrorBoundary/)
   assert.match(html, /Avvio RandAILive/)
   assert.match(vite, /@vitejs\/plugin-react/)
+})
+
+test('AI life game grows a character and advances its quest', () => {
+  const initial = createGameState(['randai'])
+  const explored = performAction(initial, 'randai', 'explore', 'RandAI')
+  const trained = performAction(explored, 'randai', 'train', 'RandAI')
+  assert.equal(explored.stats.randai.inventory.spark, 4)
+  assert.equal(explored.quest.progress, 1)
+  assert.equal(trained.stats.randai.knowledge, 2)
+  assert.ok(trained.stats.randai.xp > 0)
 })
