@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase.js'
 import { zoneFor, WORLD_ZONES } from './behavior-engine.js'
 import { MaintenanceClient, MaintenancePanel, useMaintenanceClients } from './maintenance-clients.jsx'
+import { GameHud } from './GameHud.jsx'
+import { createGameState, loadGameState, performAction, saveGameState } from './game-engine.js'
 
 const STALE_MS=5*60*1000
 const AGENTS=[
-['randai','RandAI','💬','#56b7ff'],['randbrain','RandBrain','🧠','#b981ff'],['randcore','RandCore','⚙','#ffad42'],['randmind','RandMind','▤','#64d98b'],['randradar','RandRadar','◉','#ff5c62'],['randresearch','RandResearch','⌕','#7fc8ff'],['randsecure','RandSecure','🔒','#ff6464'],['randtest','RandTest','✓','#e8d84b'],['randops','RandOps','🔧','#4fdbe8'],['randui','RandUI','✦','#ff74d3']
-].map(([id,name,glyph,tone])=>({id,name,glyph,tone}))
+['randai','RandAI','💬','#56b7ff','Esploratrice'],['randbrain','RandBrain','🧠','#b981ff','Stratega'],['randcore','RandCore','⚙','#ffad42','Custode'],['randmind','RandMind','▤','#64d98b','Memoria'],['randradar','RandRadar','◉','#ff5c62','Esploratore'],['randresearch','RandResearch','⌕','#7fc8ff','Ricercatrice'],['randsecure','RandSecure','🔒','#ff6464','Guardiana'],['randtest','RandTest','✓','#e8d84b','Collaudatore'],['randops','RandOps','🔧','#4fdbe8','Tecnico'],['randui','RandUI','✦','#ff74d3','Designer']
+].map(([id,name,glyph,tone,role])=>({id,name,glyph,tone,role}))
 
 function deriveStatus(row,now){
  const s=String(row?.status||'').toUpperCase()
@@ -30,6 +32,7 @@ function Bot({agent,focused,onFocus}){
 
 export default function App(){
  const [rows,setRows]=useState([]),[now,setNow]=useState(Date.now()),[error,setError]=useState(''),[focus,setFocus]=useState(null),[director,setDirector]=useState(true),[selectedIssue,setSelectedIssue]=useState(null)
+ const [game,setGame]=useState(()=>loadGameState(AGENTS.map(a=>a.id)))
  const issues=useMaintenanceClients()
  useEffect(()=>{
   const tick=window.setInterval(()=>setNow(Date.now()),1000)
@@ -40,9 +43,13 @@ export default function App(){
   const channel=supabase.channel('randailive-world').on('postgres_changes',{event:'*',schema:'public',table:'randcore_agent_runtime'},load).subscribe()
   return()=>{alive=false;window.clearInterval(tick);supabase.removeChannel(channel)}
  },[])
+ useEffect(()=>{saveGameState(game)},[game])
  const agents=useMemo(()=>{const byId=new Map(rows.map(r=>[String(r.agent_id||'').toLowerCase(),r]));return AGENTS.map(a=>{const row=byId.get(a.id)||{};const merged={...a,...row,status:deriveStatus(row,now)};return {...merged,life:zoneFor(merged,now)}})},[rows,now])
  const counts=useMemo(()=>agents.reduce((m,a)=>(m[a.status]=(m[a.status]||0)+1,m),{}),[agents])
  const selected=agents.find(a=>a.id===focus)||null
+ const gameAgent=agents.find(a=>a.id===game.selected)||agents[0]
+ const selectAgent=(id)=>{setFocus(id);setGame(previous=>({...previous,selected:id}))}
+ const act=(action)=>setGame(previous=>performAction(previous,gameAgent.id,action,gameAgent.name))
  const mission=agents.find(a=>a.status==='ERROR')||agents.find(a=>a.status==='RUNNING')||agents.find(a=>a.status==='WAITING_APPROVAL')||null
  const encounters=useMemo(()=>{const groups=new Map();for(const a of agents){const k=a.life.id;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(a)}return [...groups.values()].filter(g=>g.length>1)},[agents])
  return <main className="app">
@@ -59,12 +66,13 @@ export default function App(){
      <div className="floor-lines"/><div className="plant plant-a">♣</div><div className="plant plant-b">♣</div><div className="lounge"><i/><i/><i/></div><div className="coffee">☕ COFFEE</div>
      {Object.values(WORLD_ZONES).map(z=><span className="zone-label" key={z.id} style={{left:`${z.x}%`,top:`${z.y}%`}}>{z.label}</span>)}
      {issues.map((issue,index)=><MaintenanceClient key={issue.id} issue={issue} index={index} onSelect={setSelectedIssue}/>)}
-     {agents.map(a=><Bot key={a.id} agent={a} focused={focus===a.id} onFocus={setFocus}/>)}
+     {agents.map(a=><Bot key={a.id} agent={a} focused={focus===a.id} onFocus={selectAgent}/>)}
      {encounters.map((group,i)=><div key={i} className="encounter" style={{left:`${group[0].life.x}%`,top:`${group[0].life.y-7}%`}}>💬 {group.map(a=>a.name).join(' + ')}</div>)}
     </div>
     <footer className="legend"><span>WANDER = vita libera</span><span>WORK = missione reale</span><span>ALERT = emergenza</span><span>Tocca un agente per seguirlo</span></footer>
    </div>
    <aside className="sidebar">
+    <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} onAction={act}/>
     <section className="panel"><header><strong>Regia</strong><span>{selected?'FOLLOW':'FREE CAM'}</span></header>{selected?<div className="profile"><div className="profile-icon" style={{'--tone':selected.tone}}>{selected.glyph}</div><h2>{selected.name}</h2><p>{selected.life.action}</p><small>{selected.life.label}</small><b>{label(selected.status)}</b><button onClick={()=>setFocus(null)}>Smetti di seguire</button></div>:<p className="empty">Tocca un agente nella hall.</p>}</section>
     <section className="panel"><header><strong>Vita nella hall</strong><span>12s CYCLE</span></header>{agents.map(a=><button className="life-row" key={a.id} onClick={()=>setFocus(a.id)}><i style={{background:a.tone}}/><span><b>{a.name}</b><small>{a.life.action}</small></span><em>{a.life.label}</em></button>)}</section>
     <section className="panel"><header><strong>Incontri</strong><span>{encounters.length}</span></header>{encounters.length?encounters.map((g,i)=><div className="event" key={i}><div><b>{g.map(a=>a.name).join(' + ')}</b><p>si sono incontrati in {g[0].life.label}</p></div></div>):<p className="empty">Nessun incontro in questo momento.</p>}</section>
