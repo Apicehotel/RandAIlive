@@ -60,3 +60,12 @@ test('phase 2 hall is driven by a Tiled-compatible object map', () => {
   assert.ok(decorations.some(item => item.type === 'shelves'))
   assert.ok(decorations.some(item => item.type === 'terminal'))
 })
+
+test('phase 4 routes agents through mapped doors instead of crossing walls', () => {
+  const scene = read('src/phaser-world.js')
+  assert.match(scene, /function routeFor/)
+  assert.match(scene, /doorFor/)
+  assert.match(scene, /node\.route/)
+  assert.match(scene, /collision/)
+  assert.match(scene, /node\.container\.setPosition\(spawn\.x, spawn\.y\)/)
+})
