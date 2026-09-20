@@ -6,6 +6,25 @@ export const WORLD_SIZE = { width: hallMap.width * hallMap.tilewidth, height: ha
 const layers = new Map(hallMap.layers.map(layer => [layer.name, layer]))
 const objects = name => layers.get(name)?.objects || []
 const property = (object, name, fallback = '') => object.properties?.find(item => item.name === name)?.value ?? fallback
+const roomFor = name => objects('rooms').find(room => room.name === name)
+const doorFor = name => objects('doors').find(door => door.name === `${name}-door`)
+const center = object => ({ x: object.x + object.width / 2, y: object.y + object.height / 2 })
+const hubCenter = () => center(roomFor('hub'))
+const doorCenter = door => ({ x: door.x + door.width / 2, y: door.y + door.height / 2 })
+
+function routeFor(start, fromZone, toZone) {
+  const targetRoom = roomFor(toZone)
+  const target = targetRoom ? center(targetRoom) : hubCenter()
+  if (!fromZone || fromZone === toZone) return [target]
+  const route = []
+  const sourceDoor = doorFor(fromZone)
+  const targetDoor = doorFor(toZone)
+  if (sourceDoor) route.push(doorCenter(sourceDoor))
+  route.push(hubCenter())
+  if (targetDoor) route.push(doorCenter(targetDoor))
+  route.push(target)
+  return route.filter((point, index, points) => index === 0 || point.x !== points[index - 1].x || point.y !== points[index - 1].y)
+}
 
 const roomPalette = {
   reception: { fill: 0x153a54, line: 0x41d8ff },
@@ -125,7 +144,7 @@ function makeAgent(scene, agent, onSelect) {
   container.on('pointerdown', () => onSelect?.(agent.id))
   container.on('pointerover', () => ring.setStrokeStyle(4, 0xffffff, 1))
   container.on('pointerout', () => ring.setStrokeStyle(2, tone, 0.75))
-  return { container, ring, activity, tone, target: { x: 0, y: 0 }, tween: null }
+    return { container, ring, activity, tone, target: { x: 0, y: 0 }, tween: null }
 }
 
 export class LivingWorldScene extends Phaser.Scene {
@@ -209,10 +228,19 @@ export class LivingWorldScene extends Phaser.Scene {
         node = makeAgent(this, agent, this.onSelect)
         this.agentNodes.set(agent.id, node)
       }
-      const spawn = this.spawnPoints.get(agent.id) || { x: WORLD_SIZE.width / 2, y: WORLD_SIZE.height / 2 }
-      const driftX = ((agent.life?.x || 50) - 50) * 1.6
-      const driftY = ((agent.life?.y || 50) - 50) * 0.7
-      node.target = { x: spawn.x + driftX, y: spawn.y + driftY }
+      const spawn = this.spawnPoints.get(agent.id) || hubCenter()
+      const zone = agent.life?.zone || 'hub'
+      if (!node.initialized) {
+        node.container.setPosition(spawn.x, spawn.y)
+        node.initialized = true
+      }
+      if (node.zone !== zone) {
+        const route = routeFor({ x: node.container.x, y: node.container.y }, node.zone, zone)
+        if (node.tween) node.tween.stop()
+        node.route = route
+        node.zone = zone
+        node.target = node.route.shift() || spawn
+      }
       node.activity.setText(agent.life?.action || 'Disponibile')
       node.activity.setColor(agent.tone || '#67d9ff')
     }
@@ -237,7 +265,10 @@ export class LivingWorldScene extends Phaser.Scene {
   update(time) {
     for (const node of this.agentNodes.values()) {
       const distance = Phaser.Math.Distance.Between(node.container.x, node.container.y, node.target.x, node.target.y)
-      if (distance > 4 && !node.tween) node.tween = this.tweens.add({ targets: node.container, x: node.target.x, y: node.target.y, duration: 2600, ease: 'Sine.easeInOut', onComplete: () => { node.tween = null } })
+      if (distance <= 4 && node.route?.length && !node.tween) {
+        node.target = node.route.shift()
+      }
+      if (distance > 4 && !node.tween) node.tween = this.tweens.add({ targets: node.container, x: node.target.x, y: node.target.y, duration: 1800, ease: 'Sine.easeInOut', onComplete: () => { node.tween = null } })
       node.container.rotation = Math.sin((time + node.container.y) / 5000) * 0.015
     }
   }
