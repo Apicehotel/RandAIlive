@@ -6,7 +6,9 @@ RandAILive è il mondo 2D dell’ecosistema Rand: una hall pixel-art dove le AI 
 
 [Apri RandAILive su ApiceHotel](https://apicehotel.vercel.app/randailive)
 
-> Stato verificato il 19/09/2026: il percorso ufficiale risponde, ma attualmente serve ancora la shell di RandApp (`RandApp - Manutenzioni`). Non considerarlo il deploy valido del gioco finché il progetto Vercel non sarà collegato alla build RandAILive.
+> Stato verificato il 20/09/2026: il percorso ufficiale risponde, ma attualmente serve ancora la shell di RandApp (`RandApp - Manutenzioni`). Il deploy ufficiale del gioco richiede il collegamento umano del progetto Vercel alla branch corretta di questo repository.
+
+Questo repository è l’unica fonte del codice RandAILive. Il repository `Apicehotel/Apicehotel-Manutenzione` contiene RandApp/RandAI operativo e non deve essere usato per modificare il gioco.
 
 ## Cosa contiene
 
@@ -101,6 +103,8 @@ La Fase 1 è implementata in un branch separato: Phaser è il runtime della mapp
 La Fase 2 sposta la struttura della hall in `hall-map.json`: la scena non contiene più le coordinate delle stanze, ma legge gli oggetti della mappa. Le collisioni sono già dichiarate nel layer dati; l’uso fisico dei muri verrà collegato al movimento nella Fase 4.
 
 La Fase 3 completa il primo passaggio visuale: reception, biblioteca, tavoli, schermi, console, piante e scaffali sono decorazioni dichiarate nella mappa e renderizzate con uno stile coerente. Gli asset sono ancora procedurali e leggeri per mantenere la build riproducibile; sprite e tileset artistici definitivi restano un passaggio successivo, mentre le decorazioni sono già predisposte per interazioni e collisioni future.
+
+La Fase 4 collega il movimento alla stessa mappa: gli agenti usano i centri delle stanze e attraversano i varchi dichiarati nel layer `doors`, con il layer `collision` come confine visivo e di percorso. Gli spawn vengono inizializzati sui punti Tiled, così la posizione mostrata e la destinazione runtime restano coerenti.
 
 ## 8-bit Hubble
 
