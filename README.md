@@ -7,13 +7,14 @@ RandAILive è il mondo 2D dell’ecosistema Rand: una hall pixel-art dove le AI 
 [Apri RandAILive su ApiceHotel](https://apicehotel.vercel.app/randailive)
 
 > Stato verificato il 19/09/2026: il percorso ufficiale risponde, ma attualmente serve ancora la shell di RandApp (`RandApp - Manutenzioni`). Non considerarlo il deploy valido del gioco finché il progetto Vercel non sarà collegato alla build RandAILive.
- 
 
 ## Cosa contiene
 
 - hall 2D pixel-art con zone dedicate: Lobby, Core Hub, Knowledge Library, Radar Deck, Ops Bay, QA Station, Design Studio e Coffee Corner;
 - 10 AI dell’ecosistema Rand: RandAI, RandBrain, RandCore, RandMind, RandRadar, RandResearch, RandSecure, RandTest, RandOps e RandUI;
 - movimento e attività deterministiche, con ciclo di vita ogni 12 secondi;
+- runtime 2D Phaser separato dal layout React, con scena, camera, zoom e trascinamento;
+- agenti renderizzati nella scena di gioco e selezionabili direttamente sulla mappa;
 - stati runtime `RUNNING`, `IDLE`, `WAITING_APPROVAL`, `ERROR` e `OFFLINE`;
 - evidenziazione dell’AI selezionata e modalità Regia;
 - clienti-evento generati dalle segnalazioni di manutenzione ancora aperte;
@@ -47,8 +48,9 @@ Usare soltanto una chiave publishable/anon con policy RLS adeguate. Non inserire
 
 - React 19
 - Vite
+- Phaser 3
 - Supabase Realtime
-- CSS pixel-art procedurale
+- CSS per shell/HUD e impalcatura grafica della Fase 1
 - `localStorage` per il salvataggio del ciclo di gioco
 
 ## Sviluppo locale
@@ -66,11 +68,14 @@ npm run build
 npm run verify
 ```
 
-I test verificano il contratto runtime, la presenza delle AI canoniche, i clienti manutenzione, il bootstrap React e la crescita del personaggio nel ciclo di gioco. `npm run verify` esegue test e build consecutivamente prima della PR.
+I test verificano il contratto runtime, la presenza delle AI canoniche, i clienti manutenzione, il bootstrap React, il runtime Phaser e la crescita del personaggio nel ciclo di gioco. `npm run verify` esegue test e build consecutivamente prima della PR.
 
 ## Struttura principale
 
 - `src/App.jsx`: composizione della hall, runtime live e interazioni;
+- `src/PhaserWorld.jsx`: ponte React/Phaser con caricamento dinamico del motore;
+- `src/phaser-world.js`: scena 2D, camere, stanze, agenti e movimento;
+- `src/phaser-world.css`: contenitore responsive della scena;
 - `src/behavior-engine.js`: zone, percorsi sociali e attività delle AI;
 - `src/game-engine.js`: statistiche, azioni, missioni e salvataggio del gioco;
 - `src/GameHud.jsx`: HUD del personaggio selezionato;
@@ -86,6 +91,8 @@ Le modifiche passano da branch dedicato e Pull Request. Nessun agente autonomo d
 ## Stato del freeze
 
 Il punto 0 della roadmap è completato nella PR di stabilizzazione: la repo ha un lockfile riproducibile, un comando di verifica unico e documenta il disallineamento tra il percorso ufficiale e il deploy RandAILive. Il collegamento Vercel non viene modificato automaticamente: richiede approvazione umana perché il progetto attualmente collegato è RandApp.
+
+La Fase 1 è implementata in un branch separato: Phaser è il runtime della mappa, mentre React conserva HUD, Supabase, manutenzioni e regia. La grafica presente nella scena è un’impalcatura tecnica; tileset, sprite definitivi e collisioni di produzione appartengono alle fasi successive.
 
 ## 8-bit Hubble
 

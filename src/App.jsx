@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase.js'
-import { zoneFor, WORLD_ZONES } from './behavior-engine.js'
-import { MaintenanceClient, MaintenancePanel, useMaintenanceClients } from './maintenance-clients.jsx'
+import { zoneFor } from './behavior-engine.js'
+import { MaintenancePanel, useMaintenanceClients } from './maintenance-clients.jsx'
 import { GameHud } from './GameHud.jsx'
-import { createGameState, loadGameState, performAction, saveGameState } from './game-engine.js'
+import { loadGameState, performAction, saveGameState } from './game-engine.js'
+import { PhaserWorld } from './PhaserWorld.jsx'
 
 const STALE_MS=5*60*1000
 const AGENTS=[
@@ -19,16 +20,6 @@ function deriveStatus(row,now){
  return'IDLE'
 }
 const label=s=>({RUNNING:'Al lavoro',IDLE:'Disponibile',WAITING_APPROVAL:'Attende',ERROR:'Errore',OFFLINE:'Offline'}[s]||s)
-
-function Bot({agent,focused,onFocus}){
- const z=agent.life
- return <button className={`agent agent--${agent.status.toLowerCase()} agent--${z.mode.toLowerCase()} ${focused?'is-focused':''}`}
-  style={{'--x':`${z.x}%`,'--y':`${z.y}%`,'--tone':agent.tone}} onClick={()=>onFocus(agent.id)} aria-label={`${agent.name}: ${z.action}`}>
-   <div className="speech"><strong>{z.action}</strong><span>{z.label}</span></div>
-   <div className="bot" aria-hidden="true"><i className="antenna"/><div className="head"><b/><b/></div><div className="body">{agent.glyph}</div><i className="arm arm-l"/><i className="arm arm-r"/><i className="leg leg-l"/><i className="leg leg-r"/></div>
-   <div className="tag"><strong>{agent.name}</strong><small>{z.action}</small></div>
-  </button>
-}
 
 export default function App(){
  const [rows,setRows]=useState([]),[now,setNow]=useState(Date.now()),[error,setError]=useState(''),[focus,setFocus]=useState(null),[director,setDirector]=useState(true),[selectedIssue,setSelectedIssue]=useState(null)
@@ -58,18 +49,8 @@ export default function App(){
   {mission&&<div className={`mission mission--${mission.status.toLowerCase()}`}><span>MISSION LIVE</span><strong>{mission.name}</strong><p>{mission.activity||mission.detail||label(mission.status)}</p></div>}
   <section className="layout">
    <div className="world-card">
-    <div className={`world ${director&&focus?'world--focused':''}`}>
-     <div className="stars">{Array.from({length:18},(_,i)=><i key={i}/>)}</div>
-     <div className="hotel-title">RANDAPP HOTEL<small>10 AGENTS · ONE LIVING WORLD</small></div>
-     <div className="upper upper-left"/><div className="upper upper-right"/><div className="elevator elevator-left">ELEVATOR</div><div className="elevator elevator-right">ELEVATOR</div>
-     <div className="knowledge">KNOWLEDGE</div><div className="ops">OPS</div><div className="radar"><i/></div><div className="hub"><strong>RandApp Hub</strong><small>REAL-TIME ECOSYSTEM</small></div>
-     <div className="floor-lines"/><div className="plant plant-a">♣</div><div className="plant plant-b">♣</div><div className="lounge"><i/><i/><i/></div><div className="coffee">☕ COFFEE</div>
-     {Object.values(WORLD_ZONES).map(z=><span className="zone-label" key={z.id} style={{left:`${z.x}%`,top:`${z.y}%`}}>{z.label}</span>)}
-     {issues.map((issue,index)=><MaintenanceClient key={issue.id} issue={issue} index={index} onSelect={setSelectedIssue}/>)}
-     {agents.map(a=><Bot key={a.id} agent={a} focused={focus===a.id} onFocus={selectAgent}/>)}
-     {encounters.map((group,i)=><div key={i} className="encounter" style={{left:`${group[0].life.x}%`,top:`${group[0].life.y-7}%`}}>💬 {group.map(a=>a.name).join(' + ')}</div>)}
-    </div>
-    <footer className="legend"><span>WANDER = vita libera</span><span>WORK = missione reale</span><span>ALERT = emergenza</span><span>Tocca un agente per seguirlo</span></footer>
+    <PhaserWorld agents={agents} selectedId={focus} onSelect={selectAgent} director={director}/>
+    <footer className="legend"><span>TRASCINA = sposta la camera</span><span>ROTELLINA = zoom</span><span>CLICCA = segui un’AI</span><span>Fase 1 · Phaser runtime</span></footer>
    </div>
    <aside className="sidebar">
     <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} onAction={act}/>
