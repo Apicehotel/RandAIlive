@@ -49,6 +49,66 @@ function drawMappedRoom(scene, graphics, object) {
   })
 }
 
+const decorationStyle = {
+  reception: { fill: 0x0d283d, line: 0x62ddff },
+  knowledge: { fill: 0x15352e, line: 0x75e8b0 },
+  radar: { fill: 0x2c1d45, line: 0xff7892 },
+  ops: { fill: 0x3d2d18, line: 0xffc14f },
+}
+
+function drawDecoration(scene, graphics, object) {
+  const { x, y, width, height } = object
+  const style = decorationStyle[property(object, 'style', 'ops')] || decorationStyle.ops
+  graphics.lineStyle(2, style.line, 0.8)
+
+  if (object.type === 'plant') {
+    graphics.fillStyle(0x8b5538, 1).fillRoundedRect(x + 7, y + height - 15, width - 14, 15, 4)
+    graphics.fillStyle(0x4fc47a, 1).fillEllipse(x + width / 2, y + 15, width, height - 12)
+    graphics.fillStyle(0x8be69e, 0.8).fillEllipse(x + 7, y + 10, width / 2, height - 20)
+    return
+  }
+
+  if (object.type === 'shelves') {
+    graphics.fillStyle(0x0a1b2a, 0.95).fillRoundedRect(x, y, width, height, 6)
+    for (let shelf = 0; shelf < 3; shelf += 1) {
+      const shelfY = y + 12 + shelf * 26
+      graphics.lineBetween(x + 8, shelfY + 19, x + width - 8, shelfY + 19)
+      for (let book = 0; book < 9; book += 1) {
+        graphics.fillStyle([0x64e8ad, 0x41d8ff, 0xf18bff, 0xffc14f][(book + shelf) % 4], 0.85)
+          .fillRect(x + 14 + book * 26, shelfY, 12, 17)
+      }
+    }
+    return
+  }
+
+  if (object.type === 'screen') {
+    graphics.fillStyle(0x08111c, 1).fillRoundedRect(x, y, width, height, 8)
+    graphics.strokeRoundedRect(x, y, width, height, 8)
+    graphics.fillStyle(0x162f48, 1).fillRoundedRect(x + 10, y + 10, width - 20, height - 24, 4)
+    for (let line = 0; line < 4; line += 1) graphics.lineBetween(x + 22, y + 21 + line * 10, x + width - 25 - line * 14, y + 21 + line * 10)
+    return
+  }
+
+  if (object.type === 'terminal') {
+    graphics.fillStyle(style.fill, 1).fillRoundedRect(x, y + height - 18, width, 18, 4)
+    for (let monitor = 0; monitor < 3; monitor += 1) {
+      const monitorX = x + 14 + monitor * ((width - 28) / 3)
+      graphics.fillStyle(0x08111c, 1).fillRoundedRect(monitorX, y, 54, height - 20, 4)
+      graphics.lineStyle(2, style.line, 0.7).strokeRoundedRect(monitorX, y, 54, height - 20, 4)
+      graphics.fillStyle(style.line, 0.55).fillRect(monitorX + 8, y + 12, 38, 3)
+      graphics.fillStyle(style.line, 0.3).fillRect(monitorX + 8, y + 22, 28, 3)
+    }
+    return
+  }
+
+  graphics.fillStyle(style.fill, 0.95).fillRoundedRect(x, y, width, height, 12)
+  graphics.strokeRoundedRect(x, y, width, height, 12)
+  graphics.fillStyle(style.line, 0.55).fillRoundedRect(x + 14, y + 12, width - 28, 12, 6)
+  for (let seat = 0; seat < Math.max(2, Math.floor(width / 70)); seat += 1) {
+    graphics.fillStyle(0xdbeaf0, 0.9).fillCircle(x + 28 + seat * 66, y + height - 10, 7)
+  }
+}
+
 function makeAgent(scene, agent, onSelect) {
   const tone = toColor(agent.tone)
   const container = scene.add.container(0, 0).setSize(86, 86).setInteractive({ useHandCursor: true })
@@ -99,6 +159,7 @@ export class LivingWorldScene extends Phaser.Scene {
     for (let i = 0; i < 26; i += 1) this.add.circle(30 + ((i * 173) % 1210), 30 + ((i * 71) % 150), i % 3 === 0 ? 2 : 1, 0xb9efff, 0.8)
 
     for (const room of objects('rooms')) drawMappedRoom(this, background, room)
+    for (const decoration of objects('decorations')) drawDecoration(this, background, decoration)
 
     const hubMap = objects('rooms').find(room => room.type === 'hub')
     const hub = this.add.graphics()
