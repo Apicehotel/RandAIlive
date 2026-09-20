@@ -22,6 +22,7 @@ Questo repository è l’unica fonte del codice RandAILive. Il repository `Apice
 - stati runtime `RUNNING`, `IDLE`, `WAITING_APPROVAL`, `ERROR` e `OFFLINE`;
 - evidenziazione dell’AI selezionata e modalità Regia;
 - clienti-evento generati dalle segnalazioni di manutenzione ancora aperte;
+- manutentore umano come giocatore: prende le segnalazioni-quest, le svolge e vede il proprio ciclo locale;
 - pannello di gioco con energia, umore, conoscenza, esperienza, livello e inventario;
 - azioni `Esplora`, `Allena` e `Riposa`;
 - missioni, diario degli eventi e crescita delle AI;
@@ -36,6 +37,10 @@ Senza configurazione Supabase, RandAILive funziona in modalità demo comportamen
 Nel controllo live del 19/09/2026 la chiave anonima ha ricevuto `permission denied for table randcore_agent_runtime`. Questo non blocca la demo, ma impedisce la modalità live: prima del deploy ufficiale va verificata una policy RLS di sola lettura per il client pubblico e va controllata la pubblicazione Realtime della tabella. La service-role key non deve mai essere inserita nel frontend.
 
 Le azioni del gioco modificano soltanto il progresso locale del giocatore e non scrivono né modificano lo stato operativo delle AI in Supabase.
+
+## Giocatore e quest manutenzione
+
+Il modello di gioco è canonico: le AI sono NPC, le segnalazioni sono clienti/quest e il manutentore è il giocatore. Il punto 5 introduce presa in carico, completamento locale, diario e persistenza del giocatore. Le scritture operative su `segnalazioni` restano protette: potranno essere abilitate solo dentro una sessione manutentore autenticata, con RLS e hotel scope verificati; il gioco non usa scritture anonime. Il passaggio alla sincronizzazione operativa è il gate successivo e non viene simulato come già attivo.
 
 ## Configurazione Supabase
 
