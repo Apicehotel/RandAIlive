@@ -15,6 +15,7 @@ RandAILive è il mondo 2D dell’ecosistema Rand: una hall pixel-art dove le AI 
 - movimento e attività deterministiche, con ciclo di vita ogni 12 secondi;
 - runtime 2D Phaser separato dal layout React, con scena, camera, zoom e trascinamento;
 - hall descritta da una mappa Tiled-compatible con stanze, porte, collisioni e spawn;
+- arredi e punti di interesse della hall descritti nello stesso layer dati, non sparsi nel codice della scena;
 - agenti renderizzati nella scena di gioco e selezionabili direttamente sulla mappa;
 - stati runtime `RUNNING`, `IDLE`, `WAITING_APPROVAL`, `ERROR` e `OFFLINE`;
 - evidenziazione dell’AI selezionata e modalità Regia;
@@ -78,7 +79,7 @@ I test verificano il contratto runtime, la presenza delle AI canoniche, i client
 - `src/PhaserWorld.jsx`: ponte React/Phaser con caricamento dinamico del motore;
 - `src/phaser-world.js`: scena 2D, camere, stanze, agenti e movimento;
 - `src/phaser-world.css`: contenitore responsive della scena;
-- `src/hall-map.json`: mappa dati della hall con layer `rooms`, `collision`, `doors` e `spawns`;
+- `src/hall-map.json`: mappa dati della hall con layer `rooms`, `collision`, `doors`, `spawns` e `decorations`;
 - `src/behavior-engine.js`: zone, percorsi sociali e attività delle AI;
 - `src/game-engine.js`: statistiche, azioni, missioni e salvataggio del gioco;
 - `src/GameHud.jsx`: HUD del personaggio selezionato;
@@ -98,6 +99,8 @@ Il punto 0 della roadmap è completato nella PR di stabilizzazione: la repo ha u
 La Fase 1 è implementata in un branch separato: Phaser è il runtime della mappa, mentre React conserva HUD, Supabase, manutenzioni e regia. La grafica presente nella scena è un’impalcatura tecnica; tileset, sprite definitivi e collisioni di produzione appartengono alle fasi successive.
 
 La Fase 2 sposta la struttura della hall in `hall-map.json`: la scena non contiene più le coordinate delle stanze, ma legge gli oggetti della mappa. Le collisioni sono già dichiarate nel layer dati; l’uso fisico dei muri verrà collegato al movimento nella Fase 4.
+
+La Fase 3 completa il primo passaggio visuale: reception, biblioteca, tavoli, schermi, console, piante e scaffali sono decorazioni dichiarate nella mappa e renderizzate con uno stile coerente. Gli asset sono ancora procedurali e leggeri per mantenere la build riproducibile; sprite e tileset artistici definitivi restano un passaggio successivo, mentre le decorazioni sono già predisposte per interazioni e collisioni future.
 
 ## 8-bit Hubble
 
