@@ -41,3 +41,18 @@ test('phase 1 uses a separate Phaser world runtime', () => {
   assert.match(scene, /class LivingWorldScene extends Phaser\.Scene/)
   assert.match(scene, /createLivingWorldGame/)
 })
+
+test('phase 2 hall is driven by a Tiled-compatible object map', () => {
+  const map = JSON.parse(read('src/hall-map.json'))
+  const layerNames = map.layers.map(layer => layer.name)
+  const rooms = map.layers.find(layer => layer.name === 'rooms').objects
+  const spawns = map.layers.find(layer => layer.name === 'spawns').objects
+
+  assert.equal(map.orientation, 'orthogonal')
+  assert.deepEqual(layerNames, ['rooms', 'collision', 'doors', 'spawns'])
+  assert.equal(rooms.filter(room => room.type === 'room').length, 7)
+  assert.equal(rooms.filter(room => room.type === 'hub').length, 1)
+  assert.equal(spawns.length, 10)
+  assert.ok(map.layers.find(layer => layer.name === 'collision').objects.length >= 10)
+  assert.ok(map.layers.find(layer => layer.name === 'doors').objects.length >= 7)
+})
