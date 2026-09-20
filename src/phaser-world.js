@@ -1,6 +1,11 @@
 import Phaser from 'phaser'
+import hallMap from './hall-map.json'
 
-export const WORLD_SIZE = { width: 1280, height: 760 }
+export const WORLD_SIZE = { width: hallMap.width * hallMap.tilewidth, height: hallMap.height * hallMap.tileheight }
+
+const layers = new Map(hallMap.layers.map(layer => [layer.name, layer]))
+const objects = name => layers.get(name)?.objects || []
+const property = (object, name, fallback = '') => object.properties?.find(item => item.name === name)?.value ?? fallback
 
 const roomPalette = {
   reception: { fill: 0x153a54, line: 0x41d8ff },
@@ -31,6 +36,19 @@ function drawGrid(graphics) {
   for (let y = 250; y <= WORLD_SIZE.height; y += 40) graphics.lineBetween(0, y, WORLD_SIZE.width, y)
 }
 
+function drawMappedRoom(scene, graphics, object) {
+  if (object.type === 'hub') return
+  drawRoom(scene, graphics, {
+    x: object.x,
+    y: object.y,
+    width: object.width,
+    height: object.height,
+    title: property(object, 'title', object.name.toUpperCase()),
+    subtitle: property(object, 'subtitle'),
+    palette: roomPalette[property(object, 'palette', 'reception')] || roomPalette.reception,
+  })
+}
+
 function makeAgent(scene, agent, onSelect) {
   const tone = toColor(agent.tone)
   const container = scene.add.container(0, 0).setSize(86, 86).setInteractive({ useHandCursor: true })
@@ -56,6 +74,7 @@ export class LivingWorldScene extends Phaser.Scene {
     this.agentNodes = new Map()
     this.selectedId = null
     this.director = true
+    this.spawnPoints = new Map(objects('spawns').map(spawn => [spawn.name, { x: spawn.x, y: spawn.y }]))
   }
 
   create() {
@@ -79,23 +98,30 @@ export class LivingWorldScene extends Phaser.Scene {
     drawGrid(background)
     for (let i = 0; i < 26; i += 1) this.add.circle(30 + ((i * 173) % 1210), 30 + ((i * 71) % 150), i % 3 === 0 ? 2 : 1, 0xb9efff, 0.8)
 
-    drawRoom(this, background, { x: 34, y: 76, width: 238, height: 140, title: 'RECEPTION', subtitle: 'CHECK IN · QUESTS', palette: roomPalette.reception })
-    drawRoom(this, background, { x: 34, y: 300, width: 300, height: 190, title: 'KNOWLEDGE LIBRARY', subtitle: 'READ · LEARN · EVOLVE', palette: roomPalette.knowledge })
-    drawRoom(this, background, { x: 34, y: 540, width: 300, height: 165, title: 'DESIGN STUDIO', subtitle: 'IDEAS · VISUALS', palette: roomPalette.design })
-    drawRoom(this, background, { x: 950, y: 76, width: 296, height: 140, title: 'RADAR DECK', subtitle: 'EXPLORE · TRENDS', palette: roomPalette.radar })
-    drawRoom(this, background, { x: 910, y: 300, width: 336, height: 170, title: 'OPS BAY', subtitle: 'BUILD · DEPLOY', palette: roomPalette.ops })
-    drawRoom(this, background, { x: 910, y: 540, width: 300, height: 165, title: 'QA STATION', subtitle: 'TEST · IMPROVE', palette: roomPalette.qa })
-    drawRoom(this, background, { x: 535, y: 575, width: 300, height: 130, title: 'COFFEE CORNER', subtitle: 'CHAT · RECHARGE', palette: roomPalette.coffee })
+    for (const room of objects('rooms')) drawMappedRoom(this, background, room)
 
+    const hubMap = objects('rooms').find(room => room.type === 'hub')
     const hub = this.add.graphics()
-    hub.fillStyle(0x0c456a, 0.95).fillCircle(640, 360, 122)
-    hub.lineStyle(5, 0x38d9ff, 0.95).strokeCircle(640, 360, 122)
-    hub.lineStyle(2, 0x8beaff, 0.4).strokeCircle(640, 360, 96)
-    hub.lineBetween(540, 360, 740, 360)
-    hub.lineBetween(640, 260, 640, 460)
-    this.add.text(640, 330, 'RANDAPP HUB', { color: '#e9fbff', fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold' }).setOrigin(0.5)
-    this.add.text(640, 362, 'CONNECT · LEARN · GROW', { color: '#8deaff', fontFamily: 'monospace', fontSize: '11px', letterSpacing: 1 }).setOrigin(0.5)
-    this.add.text(640, 420, 'ALL AIS WELCOME', { color: '#b7f5ff', fontFamily: 'monospace', fontSize: '10px' }).setOrigin(0.5)
+    const hubX = hubMap.x + hubMap.width / 2
+    const hubY = hubMap.y + hubMap.height / 2
+    hub.fillStyle(0x0c456a, 0.95).fillCircle(hubX, hubY, 122)
+    hub.lineStyle(5, 0x38d9ff, 0.95).strokeCircle(hubX, hubY, 122)
+    hub.lineStyle(2, 0x8beaff, 0.4).strokeCircle(hubX, hubY, 96)
+    hub.lineBetween(hubX - 100, hubY, hubX + 100, hubY)
+    hub.lineBetween(hubX, hubY - 100, hubX, hubY + 100)
+    this.add.text(hubX, hubY - 30, property(hubMap, 'title'), { color: '#e9fbff', fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold' }).setOrigin(0.5)
+    this.add.text(hubX, hubY + 2, property(hubMap, 'subtitle'), { color: '#8deaff', fontFamily: 'monospace', fontSize: '11px', letterSpacing: 1 }).setOrigin(0.5)
+    this.add.text(hubX, hubY + 60, 'ALL AIS WELCOME', { color: '#b7f5ff', fontFamily: 'monospace', fontSize: '10px' }).setOrigin(0.5)
+
+    const collision = this.add.graphics()
+    for (const wall of objects('collision')) {
+      collision.fillStyle(0x02070d, 0.5).fillRect(wall.x, wall.y, wall.width, wall.height)
+      collision.lineStyle(2, 0x6ea4ba, 0.35).strokeRect(wall.x, wall.y, wall.width, wall.height)
+    }
+    for (const door of objects('doors')) {
+      collision.fillStyle(0xffc14f, 0.9).fillRect(door.x, door.y, door.width, door.height)
+      collision.lineStyle(1, 0xfff0a8, 0.8).strokeRect(door.x, door.y, door.width, door.height)
+    }
     this.add.text(640, 28, 'RANDAPP HOTEL  ·  ONE LIVING WORLD', { color: '#b9f0ff', fontFamily: 'monospace', fontSize: '18px', fontStyle: 'bold' }).setOrigin(0.5)
     this.add.text(640, 54, 'PHASER WORLD RUNTIME', { color: '#54d8ff', fontFamily: 'monospace', fontSize: '10px', letterSpacing: 2 }).setOrigin(0.5)
   }
@@ -122,7 +148,10 @@ export class LivingWorldScene extends Phaser.Scene {
         node = makeAgent(this, agent, this.onSelect)
         this.agentNodes.set(agent.id, node)
       }
-      node.target = { x: 410 + ((agent.life?.x || 50) / 100) * 430, y: 285 + ((agent.life?.y || 50) / 100) * 245 }
+      const spawn = this.spawnPoints.get(agent.id) || { x: WORLD_SIZE.width / 2, y: WORLD_SIZE.height / 2 }
+      const driftX = ((agent.life?.x || 50) - 50) * 1.6
+      const driftY = ((agent.life?.y || 50) - 50) * 0.7
+      node.target = { x: spawn.x + driftX, y: spawn.y + driftY }
       node.activity.setText(agent.life?.action || 'Disponibile')
       node.activity.setColor(agent.tone || '#67d9ff')
     }
