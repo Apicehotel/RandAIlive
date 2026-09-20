@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from './supabase.js'
+import { RANDAILIVE_HOTEL_ID, supabase } from './supabase.js'
 
 function npcPosition(issue,index){
   const state=String(issue.stato||'todo')
@@ -9,15 +9,16 @@ function npcPosition(issue,index){
   return {x:22+(lane*8)%58,y:57+(index%3)*7}
 }
 
-export function useMaintenanceClients(){
+export function useMaintenanceClients(user){
   const [issues,setIssues]=useState([])
   useEffect(()=>{
-    if(!supabase)return undefined
+    if(!supabase||!user){setIssues([]);return undefined}
     let alive=true
     const load=async()=>{
       const {data,error}=await supabase
         .from('segnalazioni')
         .select('id,hotel_id,camera,urgenza,categoria,stato,note,creato_il,tecnico_nome')
+        .eq('hotel_id',RANDAILIVE_HOTEL_ID)
         .neq('stato','done')
         .order('creato_il',{ascending:true})
         .limit(24)
@@ -30,7 +31,7 @@ export function useMaintenanceClients(){
       .on('postgres_changes',{event:'*',schema:'public',table:'segnalazioni'},load)
       .subscribe()
     return()=>{alive=false;supabase.removeChannel(channel)}
-  },[])
+  },[user])
   return issues
 }
 
@@ -48,7 +49,7 @@ export function MaintenanceClient({issue,index,onSelect}){
   </button>
 }
 
-export function MaintenancePanel({issues,selected,onSelect,player,onStart,onFinish,syncMessage}){
+export function MaintenancePanel({issues,selected,onSelect,player,onStart,onFinish,syncMessage,canSync}){
   const counts=useMemo(()=>({
     todo:issues.filter(i=>i.stato==='todo').length,
     waiting:issues.filter(i=>i.stato==='waiting').length,
@@ -63,7 +64,7 @@ export function MaintenancePanel({issues,selected,onSelect,player,onStart,onFini
       <p>{selected.note||'Nessuna descrizione'}</p>
       <small>{selected.stato==='todo'?'Aspetta di essere presa in carico':selected.stato==='waiting'?'Aspetta un pezzo o una decisione':selected.stato==='tecnico'?'Aspetta il tecnico '+(selected.tecnico_nome||'esterno'):'In attesa'}</small>
       <div className="quest-actions">
-       {player.activeIssueId===selected.id?<button onClick={()=>onFinish(selected)}>Completa quest</button>:<button onClick={()=>onStart(selected)}>Prendi quest</button>}
+       {canSync&&(player.activeIssueId===selected.id?<button onClick={()=>onFinish(selected)}>Completa quest</button>:<button onClick={()=>onStart(selected)}>Prendi quest</button>)}
       </div>
       {syncMessage&&<small className="quest-sync">{syncMessage}</small>}
     </div>:<div className="ticket-summary">

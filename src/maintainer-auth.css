@@ -1,0 +1,9 @@
+.maintainer-auth{border:1px solid rgba(86,183,255,.4);background:#091827;padding:16px;margin-bottom:12px}
+.maintainer-auth h3{margin:0 0 8px;color:#e8f4ff}
+.maintainer-auth p{margin:6px 0;color:#9bb2c8;font-size:.85rem}
+.maintainer-auth form{display:grid;gap:8px}
+.maintainer-auth input{width:100%;box-sizing:border-box;border:1px solid #315a78;background:#07121e;color:#e8f4ff;padding:10px;border-radius:4px}
+.maintainer-auth button{border:1px solid #56b7ff;background:#102b43;color:#e8f4ff;padding:9px 12px;border-radius:4px;cursor:pointer}
+.maintainer-auth .auth-error{color:#ff8d8d}
+.maintainer-auth .auth-ok{color:#82e6a9}
+.maintainer-auth .auth-user{display:flex;align-items:center;justify-content:space-between;gap:8px}
