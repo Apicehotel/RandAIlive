@@ -76,9 +76,11 @@ npm run dev
 npm test
 npm run build
 npm run verify
+npm run verify:live
 ```
 
 I test verificano il contratto runtime, la presenza delle AI canoniche, i clienti manutenzione, il bootstrap React, il runtime Phaser e la crescita del personaggio nel ciclo di gioco. `npm run verify` esegue test e build consecutivamente prima della PR.
+`npm run verify:live` controlla l’URL pubblico ufficiale e fallisce se Vercel pubblica ancora RandApp invece di RandAILive. Al controllo del 20/09/2026 il check fallisce correttamente: HTTP 200, ma titolo `RandApp - Manutenzioni`. Il progetto Vercel deve quindi essere collegato manualmente a `Apicehotel/RandAIlive` prima di considerare il punto 7 chiuso.
 
 ## Struttura principale
 
