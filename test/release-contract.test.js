@@ -28,3 +28,16 @@ test('release keeps the RandAILive bootstrap and route contract visible', () => 
   assert.match(readme, /RandApp - Manutenzioni/)
   assert.doesNotMatch(readme, /service_role/i)
 })
+
+test('phase 1 uses a separate Phaser world runtime', () => {
+  const app = read('src/App.jsx')
+  const component = read('src/PhaserWorld.jsx')
+  const scene = read('src/phaser-world.js')
+  const pkg = JSON.parse(read('package.json'))
+
+  assert.ok(pkg.dependencies.phaser)
+  assert.match(app, /PhaserWorld/)
+  assert.match(component, /import\('\.\/phaser-world\.js'\)/)
+  assert.match(scene, /class LivingWorldScene extends Phaser\.Scene/)
+  assert.match(scene, /createLivingWorldGame/)
+})
