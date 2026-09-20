@@ -40,7 +40,7 @@ Le azioni del gioco modificano soltanto il progresso locale del giocatore e non 
 
 ## Giocatore e quest manutenzione
 
-Il modello di gioco è canonico: le AI sono NPC, le segnalazioni sono clienti/quest e il manutentore è il giocatore. Il punto 5 introduce presa in carico, completamento locale, diario e persistenza del giocatore. Le scritture operative su `segnalazioni` restano protette: potranno essere abilitate solo dentro una sessione manutentore autenticata, con RLS e hotel scope verificati; il gioco non usa scritture anonime. Il passaggio alla sincronizzazione operativa è il gate successivo e non viene simulato come già attivo.
+Il modello di gioco è canonico: le AI sono NPC, le segnalazioni sono clienti/quest e il manutentore è il giocatore. Il punto 5 introduce presa in carico, completamento locale, diario e persistenza del giocatore. Il punto 6 aggiunge il gate operativo: sessione Supabase del manutentore, scope fisso `hotelgio` e sincronizzazione di presa in carico/completamento sulla tabella `segnalazioni`. Le policy RLS di Apice MultiHotel restano l’autorità finale: senza permesso `take_charge` o `complete` l’operazione viene rifiutata e il ciclo locale non avanza. Senza sessione autenticata la hall non legge né modifica segnalazioni operative.
 
 ## Configurazione Supabase
 
