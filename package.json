@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
+    "verify:live": "node scripts/verify-live.mjs",
     "verify": "npm test && npm run build"
   },
   "dependencies": {
