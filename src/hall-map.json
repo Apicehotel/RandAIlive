@@ -1,0 +1,76 @@
+{
+  "type": "map",
+  "version": "1.10",
+  "tiledversion": "1.11.0",
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "width": 40,
+  "height": 24,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    {
+      "id": 1,
+      "name": "rooms",
+      "type": "objectgroup",
+      "objects": [
+        { "id": 1, "name": "reception", "type": "room", "x": 32, "y": 64, "width": 256, "height": 160, "properties": [{ "name": "title", "type": "string", "value": "RECEPTION" }, { "name": "subtitle", "type": "string", "value": "CHECK IN · QUESTS" }, { "name": "palette", "type": "string", "value": "reception" }] },
+        { "id": 2, "name": "knowledge", "type": "room", "x": 32, "y": 288, "width": 320, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "KNOWLEDGE LIBRARY" }, { "name": "subtitle", "type": "string", "value": "READ · LEARN · EVOLVE" }, { "name": "palette", "type": "string", "value": "knowledge" }] },
+        { "id": 3, "name": "design", "type": "room", "x": 32, "y": 512, "width": 320, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "DESIGN STUDIO" }, { "name": "subtitle", "type": "string", "value": "IDEAS · VISUALS" }, { "name": "palette", "type": "string", "value": "design" }] },
+        { "id": 4, "name": "radar", "type": "room", "x": 928, "y": 64, "width": 320, "height": 160, "properties": [{ "name": "title", "type": "string", "value": "RADAR DECK" }, { "name": "subtitle", "type": "string", "value": "EXPLORE · TRENDS" }, { "name": "palette", "type": "string", "value": "radar" }] },
+        { "id": 5, "name": "ops", "type": "room", "x": 896, "y": 288, "width": 352, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "OPS BAY" }, { "name": "subtitle", "type": "string", "value": "BUILD · DEPLOY" }, { "name": "palette", "type": "string", "value": "ops" }] },
+        { "id": 6, "name": "qa", "type": "room", "x": 928, "y": 512, "width": 320, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "QA STATION" }, { "name": "subtitle", "type": "string", "value": "TEST · IMPROVE" }, { "name": "palette", "type": "string", "value": "qa" }] },
+        { "id": 7, "name": "coffee", "type": "room", "x": 512, "y": 576, "width": 320, "height": 128, "properties": [{ "name": "title", "type": "string", "value": "COFFEE CORNER" }, { "name": "subtitle", "type": "string", "value": "CHAT · RECHARGE" }, { "name": "palette", "type": "string", "value": "coffee" }] },
+        { "id": 8, "name": "hub", "type": "hub", "x": 512, "y": 256, "width": 256, "height": 256, "properties": [{ "name": "title", "type": "string", "value": "RANDAPP HUB" }, { "name": "subtitle", "type": "string", "value": "CONNECT · LEARN · GROW" }] }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "collision",
+      "type": "objectgroup",
+      "objects": [
+        { "id": 101, "name": "north-wall", "type": "wall", "x": 0, "y": 0, "width": 1280, "height": 32 },
+        { "id": 102, "name": "south-wall", "type": "wall", "x": 0, "y": 736, "width": 1280, "height": 32 },
+        { "id": 103, "name": "west-wall", "type": "wall", "x": 0, "y": 0, "width": 32, "height": 768 },
+        { "id": 104, "name": "east-wall", "type": "wall", "x": 1248, "y": 0, "width": 32, "height": 768 },
+        { "id": 105, "name": "reception-wall", "type": "wall", "x": 32, "y": 224, "width": 256, "height": 12 },
+        { "id": 106, "name": "library-wall", "type": "wall", "x": 32, "y": 480, "width": 320, "height": 12 },
+        { "id": 107, "name": "design-wall", "type": "wall", "x": 32, "y": 704, "width": 320, "height": 12 },
+        { "id": 108, "name": "radar-wall", "type": "wall", "x": 928, "y": 224, "width": 320, "height": 12 },
+        { "id": 109, "name": "ops-wall", "type": "wall", "x": 896, "y": 480, "width": 352, "height": 12 },
+        { "id": 110, "name": "qa-wall", "type": "wall", "x": 928, "y": 704, "width": 320, "height": 12 }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "doors",
+      "type": "objectgroup",
+      "objects": [
+        { "id": 201, "name": "reception-door", "type": "door", "x": 144, "y": 224, "width": 48, "height": 12 },
+        { "id": 202, "name": "library-door", "type": "door", "x": 176, "y": 480, "width": 48, "height": 12 },
+        { "id": 203, "name": "design-door", "type": "door", "x": 176, "y": 704, "width": 48, "height": 12 },
+        { "id": 204, "name": "radar-door", "type": "door", "x": 1056, "y": 224, "width": 48, "height": 12 },
+        { "id": 205, "name": "ops-door", "type": "door", "x": 1048, "y": 480, "width": 48, "height": 12 },
+        { "id": 206, "name": "qa-door", "type": "door", "x": 1056, "y": 704, "width": 48, "height": 12 },
+        { "id": 207, "name": "coffee-door", "type": "door", "x": 648, "y": 576, "width": 48, "height": 12 }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "spawns",
+      "type": "objectgroup",
+      "objects": [
+        { "id": 301, "name": "randai", "type": "spawn", "x": 430, "y": 320 },
+        { "id": 302, "name": "randbrain", "type": "spawn", "x": 500, "y": 320 },
+        { "id": 303, "name": "randcore", "type": "spawn", "x": 570, "y": 320 },
+        { "id": 304, "name": "randmind", "type": "spawn", "x": 710, "y": 320 },
+        { "id": 305, "name": "randradar", "type": "spawn", "x": 780, "y": 320 },
+        { "id": 306, "name": "randresearch", "type": "spawn", "x": 430, "y": 500 },
+        { "id": 307, "name": "randsecure", "type": "spawn", "x": 500, "y": 500 },
+        { "id": 308, "name": "randtest", "type": "spawn", "x": 570, "y": 500 },
+        { "id": 309, "name": "randops", "type": "spawn", "x": 710, "y": 500 },
+        { "id": 310, "name": "randui", "type": "spawn", "x": 780, "y": 500 }
+      ]
+    }
+  ]
+}
