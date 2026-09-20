@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { supabase } from './supabase.js'
+import { RANDAILIVE_HOTEL_ID, supabase } from './supabase.js'
 import { zoneFor } from './behavior-engine.js'
 import { MaintenancePanel, useMaintenanceClients } from './maintenance-clients.jsx'
 import { GameHud } from './GameHud.jsx'
 import { loadGameState, performAction, saveGameState } from './game-engine.js'
 import { PhaserWorld } from './PhaserWorld.jsx'
 import { finishQuest, loadPlayerState, savePlayerState, startQuest } from './player-quests.js'
+import { signInMaintainer, signOutMaintainer, useMaintainerAuth } from './maintainer-auth.jsx'
 import './player-quests.css'
+import './maintainer-auth.css'
 
 const STALE_MS=5*60*1000
 const AGENTS=[
@@ -28,16 +30,17 @@ export default function App(){
  const [game,setGame]=useState(()=>loadGameState(AGENTS.map(a=>a.id)))
  const [player,setPlayer]=useState(()=>loadPlayerState())
  const [questMessage,setQuestMessage]=useState('')
- const issues=useMaintenanceClients()
+ const {user,loading:authLoading}=useMaintainerAuth()
+ const issues=useMaintenanceClients(user)
  useEffect(()=>{
   const tick=window.setInterval(()=>setNow(Date.now()),1000)
-  if(!supabase)return()=>window.clearInterval(tick)
+  if(!supabase||!user){setRows([]);return()=>window.clearInterval(tick)}
   let alive=true
-  const load=async()=>{const {data,error:e}=await supabase.from('randcore_agent_runtime').select('agent_id,status,heartbeat_at,task_id,activity,detail,hotel_id,updated_at').order('agent_id');if(!alive)return;if(e){setError(e.message);return}setError('');setRows(data||[])}
+  const load=async()=>{const {data,error:e}=await supabase.from('randcore_agent_runtime').select('agent_id,status,heartbeat_at,task_id,activity,detail,hotel_id,updated_at').eq('hotel_id',RANDAILIVE_HOTEL_ID).order('agent_id');if(!alive)return;if(e){setError(e.message);return}setError('');setRows(data||[])}
   load()
   const channel=supabase.channel('randailive-world').on('postgres_changes',{event:'*',schema:'public',table:'randcore_agent_runtime'},load).subscribe()
   return()=>{alive=false;window.clearInterval(tick);supabase.removeChannel(channel)}
- },[])
+ },[user])
  useEffect(()=>{saveGameState(game)},[game])
  useEffect(()=>{savePlayerState(player)},[player])
  const agents=useMemo(()=>{const byId=new Map(rows.map(r=>[String(r.agent_id||'').toLowerCase(),r]));return AGENTS.map(a=>{const row=byId.get(a.id)||{};const merged={...a,...row,status:deriveStatus(row,now)};return {...merged,life:zoneFor(merged,now)}})},[rows,now])
@@ -46,8 +49,19 @@ export default function App(){
  const gameAgent=agents.find(a=>a.id===game.selected)||agents[0]
  const selectAgent=(id)=>{setFocus(id);setGame(previous=>({...previous,selected:id}))}
  const act=(action)=>setGame(previous=>performAction(previous,gameAgent.id,action,gameAgent.name))
- const startPlayerQuest=(issue)=>{setPlayer(previous=>startQuest(previous,issue));setQuestMessage(`Quest locale presa da ${player.name}. La sincronizzazione operativa richiede accesso manutentore.`)}
- const finishPlayerQuest=(issue)=>{setPlayer(previous=>finishQuest(previous,issue));setQuestMessage(`Quest locale completata da ${player.name}. Il completamento operativo resta protetto da RandApp/RLS.`)}
+ const startPlayerQuest=async(issue)=>{
+  if(!user)return
+  const {error}=await supabase.from('segnalazioni').update({stato:'tecnico',tecnico_id:user.id,tecnico_nome:user.email||player.name}).eq('id',issue.id).eq('hotel_id',RANDAILIVE_HOTEL_ID).select('id').single()
+  if(error){setQuestMessage(`Presa non autorizzata: ${error.message}`);return}
+  setPlayer(previous=>startQuest(previous,issue));setQuestMessage(`Quest presa da ${user.email||player.name}. Salvata su RandApp.`)
+ }
+ const finishPlayerQuest=async(issue)=>{
+  if(!user)return
+  const {error}=await supabase.from('segnalazioni').update({stato:'done',completato_da:user.email||player.name,completato_il:new Date().toISOString(),nota_completamento:'Completata da RandAILive'}).eq('id',issue.id).eq('hotel_id',RANDAILIVE_HOTEL_ID).select('id').single()
+  if(error){setQuestMessage(`Completamento non autorizzato: ${error.message}`);return}
+  setPlayer(previous=>finishQuest(previous,issue));setQuestMessage(`Quest completata da ${user.email||player.name}. Aggiornata su RandApp.`)
+ }
+ const login=async(event)=>{event.preventDefault();const form=new FormData(event.currentTarget);const {error}=await signInMaintainer(String(form.get('email')||''),String(form.get('password')||''));setQuestMessage(error?`Accesso negato: ${error.message}`:'Accesso manutentore riuscito.');if(!error)event.currentTarget.reset()}
  const mission=agents.find(a=>a.status==='ERROR')||agents.find(a=>a.status==='RUNNING')||agents.find(a=>a.status==='WAITING_APPROVAL')||null
  const encounters=useMemo(()=>{const groups=new Map();for(const a of agents){const k=a.life.id;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(a)}return [...groups.values()].filter(g=>g.length>1)},[agents])
  return <main className="app">
@@ -64,8 +78,9 @@ export default function App(){
     <section className="panel"><header><strong>Regia</strong><span>{selected?'FOLLOW':'FREE CAM'}</span></header>{selected?<div className="profile"><div className="profile-icon" style={{'--tone':selected.tone}}>{selected.glyph}</div><h2>{selected.name}</h2><p>{selected.life.action}</p><small>{selected.life.label}</small><b>{label(selected.status)}</b><button onClick={()=>setFocus(null)}>Smetti di seguire</button></div>:<p className="empty">Tocca un agente nella hall.</p>}</section>
     <section className="panel"><header><strong>Vita nella hall</strong><span>12s CYCLE</span></header>{agents.map(a=><button className="life-row" key={a.id} onClick={()=>setFocus(a.id)}><i style={{background:a.tone}}/><span><b>{a.name}</b><small>{a.life.action}</small></span><em>{a.life.label}</em></button>)}</section>
     <section className="panel"><header><strong>Incontri</strong><span>{encounters.length}</span></header>{encounters.length?encounters.map((g,i)=><div className="event" key={i}><div><b>{g.map(a=>a.name).join(' + ')}</b><p>si sono incontrati in {g[0].life.label}</p></div></div>):<p className="empty">Nessun incontro in questo momento.</p>}</section>
-    <section className="panel player-panel"><header><strong>Giocatore manutentore</strong><span>{player.name}</span></header><p className="empty">Le AI sono NPC. Tu prendi le quest dei clienti e le svolgi.</p>{player.activeIssueId&&<p className="quest-active">Quest attiva: {issues.find(issue=>issue.id===player.activeIssueId)?.camera||'segnalazione'}</p>}</section>
-    <MaintenancePanel issues={issues.filter(issue=>!player.completedIssueIds.includes(issue.id))} selected={selectedIssue} onSelect={setSelectedIssue} player={player} onStart={startPlayerQuest} onFinish={finishPlayerQuest} syncMessage={questMessage}/>
+    <section className="panel player-panel"><header><strong>Giocatore manutentore</strong><span>{user?.email||player.name}</span></header><p className="empty">Le AI sono NPC. Tu prendi le quest dei clienti e le svolgi.</p>{player.activeIssueId&&<p className="quest-active">Quest attiva: {issues.find(issue=>issue.id===player.activeIssueId)?.camera||'segnalazione'}</p>}</section>
+    <section className="maintainer-auth"><h3>Accesso operativo</h3>{authLoading?<p>Verifica sessione…</p>:user?<div className="auth-user"><span className="auth-ok">Autenticato · {user.email}</span><button onClick={signOutMaintainer}>Esci</button></div>:<form onSubmit={login}><input name="email" type="email" autoComplete="username" placeholder="Email manutentore" required/><input name="password" type="password" autoComplete="current-password" placeholder="Password" required/><button type="submit">Accedi per sincronizzare</button><p>Hotel operativo: {RANDAILIVE_HOTEL_ID}. Senza sessione non vengono mostrate né modificate segnalazioni.</p></form>}</section>
+    <MaintenancePanel issues={issues.filter(issue=>!player.completedIssueIds.includes(issue.id))} selected={selectedIssue} onSelect={setSelectedIssue} player={player} onStart={startPlayerQuest} onFinish={finishPlayerQuest} syncMessage={questMessage} canSync={Boolean(user)}/>
     {error&&<div className="error">{error}</div>}
    </aside>
   </section>
