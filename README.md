@@ -7,9 +7,7 @@ RandAILive è il mondo 2D dell’ecosistema Rand: una hall pixel-art dove le AI 
 [Apri RandAILive su ApiceHotel](https://apicehotel.vercel.app/randailive)
 
 > Stato verificato il 19/09/2026: il percorso ufficiale risponde, ma attualmente serve ancora la shell di RandApp (`RandApp - Manutenzioni`). Non considerarlo il deploy valido del gioco finché il progetto Vercel non sarà collegato alla build RandAILive.
-
-Per il controllo visuale della build RandAILive è disponibile il deploy standalone:
-[rand-a-ilive.vercel.app](https://rand-a-ilive.vercel.app)
+ 
 
 ## Cosa contiene
 
