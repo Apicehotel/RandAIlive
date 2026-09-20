@@ -113,6 +113,8 @@ La Fase 3 completa il primo passaggio visuale: reception, biblioteca, tavoli, sc
 
 La Fase 4 collega il movimento alla stessa mappa: gli agenti usano i centri delle stanze e attraversano i varchi dichiarati nel layer `doors`, con il layer `collision` come confine visivo e di percorso. Gli spawn vengono inizializzati sui punti Tiled, così la posizione mostrata e la destinazione runtime restano coerenti.
 
+Il punto 8 è il passaggio grafico della hall: pavimenti a piastrelle, bordi luminosi, lampade, wayfinding, profondità del fondale, pedane e badge degli NPC rendono leggibili stanze e ruoli a colpo d'occhio. Il concept visivo è quello della hall futuristica Apicehotel: blu notte, ciano, oro e accenti per agente. Il renderer resta data-driven e procedurale per non bloccare il freeze: in una fase asset successiva ogni decorazione potrà essere sostituita da sprite/tileset mantenendo invariati `hall-map.json`, quest e runtime.
+
 ## 8-bit Hubble
 
 Il progetto prende ispirazione solo dal concetto di sprite, layer, palette e proceduralità. Non incorpora codice di `amcajal/8_bit_hubble`.
