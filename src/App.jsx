@@ -5,6 +5,8 @@ import { MaintenancePanel, useMaintenanceClients } from './maintenance-clients.j
 import { GameHud } from './GameHud.jsx'
 import { loadGameState, performAction, saveGameState } from './game-engine.js'
 import { PhaserWorld } from './PhaserWorld.jsx'
+import { finishQuest, loadPlayerState, savePlayerState, startQuest } from './player-quests.js'
+import './player-quests.css'
 
 const STALE_MS=5*60*1000
 const AGENTS=[
@@ -24,6 +26,8 @@ const label=s=>({RUNNING:'Al lavoro',IDLE:'Disponibile',WAITING_APPROVAL:'Attend
 export default function App(){
  const [rows,setRows]=useState([]),[now,setNow]=useState(Date.now()),[error,setError]=useState(''),[focus,setFocus]=useState(null),[director,setDirector]=useState(true),[selectedIssue,setSelectedIssue]=useState(null)
  const [game,setGame]=useState(()=>loadGameState(AGENTS.map(a=>a.id)))
+ const [player,setPlayer]=useState(()=>loadPlayerState())
+ const [questMessage,setQuestMessage]=useState('')
  const issues=useMaintenanceClients()
  useEffect(()=>{
   const tick=window.setInterval(()=>setNow(Date.now()),1000)
@@ -35,12 +39,15 @@ export default function App(){
   return()=>{alive=false;window.clearInterval(tick);supabase.removeChannel(channel)}
  },[])
  useEffect(()=>{saveGameState(game)},[game])
+ useEffect(()=>{savePlayerState(player)},[player])
  const agents=useMemo(()=>{const byId=new Map(rows.map(r=>[String(r.agent_id||'').toLowerCase(),r]));return AGENTS.map(a=>{const row=byId.get(a.id)||{};const merged={...a,...row,status:deriveStatus(row,now)};return {...merged,life:zoneFor(merged,now)}})},[rows,now])
  const counts=useMemo(()=>agents.reduce((m,a)=>(m[a.status]=(m[a.status]||0)+1,m),{}),[agents])
  const selected=agents.find(a=>a.id===focus)||null
  const gameAgent=agents.find(a=>a.id===game.selected)||agents[0]
  const selectAgent=(id)=>{setFocus(id);setGame(previous=>({...previous,selected:id}))}
  const act=(action)=>setGame(previous=>performAction(previous,gameAgent.id,action,gameAgent.name))
+ const startPlayerQuest=(issue)=>{setPlayer(previous=>startQuest(previous,issue));setQuestMessage(`Quest locale presa da ${player.name}. La sincronizzazione operativa richiede accesso manutentore.`)}
+ const finishPlayerQuest=(issue)=>{setPlayer(previous=>finishQuest(previous,issue));setQuestMessage(`Quest locale completata da ${player.name}. Il completamento operativo resta protetto da RandApp/RLS.`)}
  const mission=agents.find(a=>a.status==='ERROR')||agents.find(a=>a.status==='RUNNING')||agents.find(a=>a.status==='WAITING_APPROVAL')||null
  const encounters=useMemo(()=>{const groups=new Map();for(const a of agents){const k=a.life.id;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(a)}return [...groups.values()].filter(g=>g.length>1)},[agents])
  return <main className="app">
@@ -50,14 +57,15 @@ export default function App(){
   <section className="layout">
    <div className="world-card">
     <PhaserWorld agents={agents} selectedId={focus} onSelect={selectAgent} director={director}/>
-    <footer className="legend"><span>TRASCINA = sposta la camera</span><span>ROTELLINA = zoom</span><span>CLICCA = segui un’AI</span><span>Fase 1 · Phaser runtime</span></footer>
+    <footer className="legend"><span>TRASCINA = sposta la camera</span><span>ROTELLINA = zoom</span><span>CLICCA = segui un’AI</span><span>Punto 5 · quest manutentore</span></footer>
    </div>
    <aside className="sidebar">
     <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} onAction={act}/>
     <section className="panel"><header><strong>Regia</strong><span>{selected?'FOLLOW':'FREE CAM'}</span></header>{selected?<div className="profile"><div className="profile-icon" style={{'--tone':selected.tone}}>{selected.glyph}</div><h2>{selected.name}</h2><p>{selected.life.action}</p><small>{selected.life.label}</small><b>{label(selected.status)}</b><button onClick={()=>setFocus(null)}>Smetti di seguire</button></div>:<p className="empty">Tocca un agente nella hall.</p>}</section>
     <section className="panel"><header><strong>Vita nella hall</strong><span>12s CYCLE</span></header>{agents.map(a=><button className="life-row" key={a.id} onClick={()=>setFocus(a.id)}><i style={{background:a.tone}}/><span><b>{a.name}</b><small>{a.life.action}</small></span><em>{a.life.label}</em></button>)}</section>
     <section className="panel"><header><strong>Incontri</strong><span>{encounters.length}</span></header>{encounters.length?encounters.map((g,i)=><div className="event" key={i}><div><b>{g.map(a=>a.name).join(' + ')}</b><p>si sono incontrati in {g[0].life.label}</p></div></div>):<p className="empty">Nessun incontro in questo momento.</p>}</section>
-    <MaintenancePanel issues={issues} selected={selectedIssue} onSelect={setSelectedIssue}/>
+    <section className="panel player-panel"><header><strong>Giocatore manutentore</strong><span>{player.name}</span></header><p className="empty">Le AI sono NPC. Tu prendi le quest dei clienti e le svolgi.</p>{player.activeIssueId&&<p className="quest-active">Quest attiva: {issues.find(issue=>issue.id===player.activeIssueId)?.camera||'segnalazione'}</p>}</section>
+    <MaintenancePanel issues={issues.filter(issue=>!player.completedIssueIds.includes(issue.id))} selected={selectedIssue} onSelect={setSelectedIssue} player={player} onStart={startPlayerQuest} onFinish={finishPlayerQuest} syncMessage={questMessage}/>
     {error&&<div className="error">{error}</div>}
    </aside>
   </section>
