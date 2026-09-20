@@ -62,3 +62,16 @@ test('the human maintainer is the player and maintenance reports are quests',()=
  assert.match(quests,/localStorage/)
  assert.match(app,/Punto 5 · quest manutentore/)
 })
+
+test('operational quest sync is authenticated and hotel-scoped',()=>{
+ const app=fs.readFileSync('src/App.jsx','utf8')
+ const clients=fs.readFileSync('src/maintenance-clients.jsx','utf8')
+ const auth=fs.readFileSync('src/maintainer-auth.jsx','utf8')
+ assert.match(auth,/signInWithPassword/)
+ assert.match(app,/useMaintainerAuth/)
+ assert.match(app,/tecnico_id:user\.id/)
+ assert.match(app,/stato:'done'/)
+ assert.match(app,/eq\('hotel_id',RANDAILIVE_HOTEL_ID\)/)
+ assert.match(clients,/eq\('hotel_id',RANDAILIVE_HOTEL_ID\)/)
+ assert.match(clients,/if\(!supabase\|\|!user\)/)
+})
