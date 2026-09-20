@@ -49,3 +49,16 @@ test('AI life game grows a character and advances its quest', () => {
   assert.equal(trained.stats.randai.knowledge, 2)
   assert.ok(trained.stats.randai.xp > 0)
 })
+
+test('the human maintainer is the player and maintenance reports are quests',()=>{
+ const app=fs.readFileSync('src/App.jsx','utf8')
+ const clients=fs.readFileSync('src/maintenance-clients.jsx','utf8')
+ const quests=fs.readFileSync('src/player-quests.js','utf8')
+ assert.match(app,/Giocatore manutentore/)
+ assert.match(app,/startQuest/)
+ assert.match(app,/finishQuest/)
+ assert.match(clients,/Prendi quest/)
+ assert.match(clients,/Completa quest/)
+ assert.match(quests,/localStorage/)
+ assert.match(app,/Punto 5 · quest manutentore/)
+})

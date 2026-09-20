@@ -1,0 +1,6 @@
+.player-panel .empty{padding-bottom:4px}
+.quest-active{margin:0 10px 10px;padding:7px 9px;border:1px solid #2bc8a0;background:#082d2b;color:#a7ffe1;font-size:8px}
+.quest-actions{display:flex;gap:6px;margin-top:8px}
+.quest-actions button{padding:7px 9px;border:1px solid #2bc8a0;background:#0b3b3a;color:#d9fff2;border-radius:5px;font:inherit;font-size:8px;cursor:pointer}
+.quest-actions button:hover{filter:brightness(1.2)}
+.quest-sync{display:block;margin-top:7px;color:#ffd47a;font-size:7px}

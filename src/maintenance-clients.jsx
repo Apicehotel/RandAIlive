@@ -48,7 +48,7 @@ export function MaintenanceClient({issue,index,onSelect}){
   </button>
 }
 
-export function MaintenancePanel({issues,selected,onSelect}){
+export function MaintenancePanel({issues,selected,onSelect,player,onStart,onFinish,syncMessage}){
   const counts=useMemo(()=>({
     todo:issues.filter(i=>i.stato==='todo').length,
     waiting:issues.filter(i=>i.stato==='waiting').length,
@@ -62,6 +62,10 @@ export function MaintenancePanel({issues,selected,onSelect}){
       <em>{selected.categoria||'Varie'} · {selected.urgenza||'media'}</em>
       <p>{selected.note||'Nessuna descrizione'}</p>
       <small>{selected.stato==='todo'?'Aspetta di essere presa in carico':selected.stato==='waiting'?'Aspetta un pezzo o una decisione':selected.stato==='tecnico'?'Aspetta il tecnico '+(selected.tecnico_nome||'esterno'):'In attesa'}</small>
+      <div className="quest-actions">
+       {player.activeIssueId===selected.id?<button onClick={()=>onFinish(selected)}>Completa quest</button>:<button onClick={()=>onStart(selected)}>Prendi quest</button>}
+      </div>
+      {syncMessage&&<small className="quest-sync">{syncMessage}</small>}
     </div>:<div className="ticket-summary">
       <p><b>{counts.todo}</b> in lobby</p>
       <p><b>{counts.waiting}</b> in attesa pezzo</p>
