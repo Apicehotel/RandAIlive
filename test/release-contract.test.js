@@ -26,6 +26,8 @@ test('release keeps the RandAILive bootstrap and route contract visible', () => 
   assert.match(vercel, /index\.html/)
   assert.match(readme, /apicehotel\.vercel\.app\/randailive/)
   assert.match(readme, /RandApp - Manutenzioni/)
+  assert.match(readme, /DigitalOcean/)
+  assert.match(readme, /Vercel è in freeze/)
   assert.doesNotMatch(readme, /service_role/i)
 })
 

@@ -1,0 +1,24 @@
+name: randailive
+region: fra
+services:
+  - name: web
+    dockerfile_path: Dockerfile
+    github:
+      repo: Apicehotel/RandAIlive
+      branch: main
+      deploy_on_push: false
+    http_port: 80
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /healthz
+    envs:
+      - key: VITE_SUPABASE_URL
+        scope: BUILD_TIME
+        type: SECRET
+      - key: VITE_SUPABASE_ANON_KEY
+        scope: BUILD_TIME
+        type: SECRET
+      - key: VITE_RANDAILIVE_HOTEL_ID
+        scope: BUILD_TIME
+        value: hotelgio
