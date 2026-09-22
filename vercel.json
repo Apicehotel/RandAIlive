@@ -1,6 +1,5 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "_comment": "Vercel freeze: non usare come hosting di prodotto fino al completamento. Staging = DigitalOcean (.do/app.yaml)."
+  ]
 }
