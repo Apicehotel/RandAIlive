@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "node --test",
     "verify:live": "node scripts/verify-live.mjs",
-    "verify": "npm test && npm run build"
+    "verify": "npm test && npm run build",
+    "ocean:up": "docker compose up --build -d",
+    "ocean:down": "docker compose down"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

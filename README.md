@@ -2,11 +2,17 @@
 
 RandAILive è il mondo 2D dell’ecosistema Rand: una hall pixel-art dove le AI vivono, lavorano, incontrano i clienti e possono crescere attraverso un piccolo ciclo di gioco.
 
-## Link ufficiale
+## Link e hosting
 
-[Apri RandAILive su ApiceHotel](https://apicehotel.vercel.app/randailive)
+**Staging (fino al completamento):** DigitalOcean, non Vercel.
 
-> Stato verificato il 20/09/2026: il percorso ufficiale risponde, ma attualmente serve ancora la shell di RandApp (`RandApp - Manutenzioni`). Il deploy ufficiale del gioco richiede il collegamento umano del progetto Vercel alla branch corretta di questo repository.
+- build locale come in produzione: `npm run ocean:up` → http://127.0.0.1:8080
+- spec App Platform: `.do/app.yaml` + `Dockerfile` + `deploy/nginx.conf`
+- verifica staging: `RANDAILIVE_LIVE_URL=https://TUO-APP.ondigitalocean.app npm run verify:live`
+
+**Vercel è in freeze** fino a quando il gioco non è completo (grafica asset, lore XP/coscienza, clienti). Non promuovere preview Vercel a URL ufficiale.
+
+**Percorso Apicehotel** [`/randailive`](https://apicehotel.vercel.app/randailive): oggi serve ancora il vecchio embed Melon dentro `Apicehotel-Manutenzione` (`RandApp - Manutenzioni`), non questo repository. Quando RandAILive sarà pronto su Ocean, il path ufficiale andrà puntato lì (rewrite/proxy o redirect) con decisione umana.
 
 Questo repository è l’unica fonte del codice RandAILive. Il repository `Apicehotel/Apicehotel-Manutenzione` contiene RandApp/RandAI operativo e non deve essere usato per modificare il gioco.
 
@@ -76,11 +82,27 @@ npm run dev
 npm test
 npm run build
 npm run verify
-npm run verify:live
+npm run ocean:up
+RANDAILIVE_LIVE_URL=https://TUO-APP.ondigitalocean.app npm run verify:live
 ```
 
 I test verificano il contratto runtime, la presenza delle AI canoniche, i clienti manutenzione, il bootstrap React, il runtime Phaser e la crescita del personaggio nel ciclo di gioco. `npm run verify` esegue test e build consecutivamente prima della PR.
-`npm run verify:live` controlla l’URL pubblico ufficiale e fallisce se Vercel pubblica ancora RandApp invece di RandAILive. Al controllo del 20/09/2026 il check fallisce correttamente: HTTP 200, ma titolo `RandApp - Manutenzioni`. Il progetto Vercel deve quindi essere collegato manualmente a `Apicehotel/RandAIlive` prima di considerare il punto 7 chiuso.
+
+`npm run verify:live` senza URL controlla ancora `https://apicehotel.vercel.app/randailive` e fallisce correttamente finché risponde RandApp. Con `RANDAILIVE_LIVE_URL` punta allo staging DigitalOcean.
+
+## Deploy DigitalOcean
+
+1. Crea un’App su DigitalOcean App Platform importando questo repo (o `doctl apps create --spec .do/app.yaml`).
+2. Imposta i secret di build `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (solo anon/publishable).
+3. Lascia `deploy_on_push: false` finché il gioco non è completo: i deploy restano manuali.
+4. Quando Ocean è verde, `verify:live` sullo URL `.ondigitalocean.app` deve trovare il titolo `RandAILive`.
+
+Locale equivalente:
+
+```bash
+cp .env.example .env.local   # opzionale
+npm run ocean:up
+```
 
 ## Struttura principale
 
@@ -99,11 +121,13 @@ I test verificano il contratto runtime, la presenza delle AI canoniche, i client
 
 ## Sicurezza del workflow
 
-Le modifiche passano da branch dedicato e Pull Request. Nessun agente autonomo deve fare push o deploy diretto su `main`. Il merge e il deploy richiedono revisione umana.
+Le modifiche passano da branch dedicato e Pull Request. Nessun agente autonomo deve fare push o deploy diretto su `main`. Il merge e il deploy richiedono revisione umana. Fino al completamento del gioco, lo staging ufficiale è DigitalOcean (deploy manuale); Vercel non va usato come destinazione di prodotto.
 
 ## Stato del freeze
 
-Il punto 0 della roadmap è completato nella PR di stabilizzazione: la repo ha un lockfile riproducibile, un comando di verifica unico e documenta il disallineamento tra il percorso ufficiale e il deploy RandAILive. Il collegamento Vercel non viene modificato automaticamente: richiede approvazione umana perché il progetto attualmente collegato è RandApp.
+Il punto 0 della roadmap è completato nella PR di stabilizzazione: la repo ha un lockfile riproducibile, un comando di verifica unico e documenta il disallineamento tra il percorso Apicehotel e questo repository. Il path `/randailive` su Apicehotel resta RandApp finché non si decide il proxy verso Ocean.
+
+Vercel resta congelato come canale di prodotto: le preview automatiche non sostituiscono lo staging DigitalOcean.
 
 La Fase 1 è implementata in un branch separato: Phaser è il runtime della mappa, mentre React conserva HUD, Supabase, manutenzioni e regia. La grafica presente nella scena è un’impalcatura tecnica; tileset, sprite definitivi e collisioni di produzione appartengono alle fasi successive.
 
