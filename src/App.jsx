@@ -70,8 +70,8 @@ export default function App(){
   {mission&&<div className={`mission mission--${mission.status.toLowerCase()}`}><span>MISSION LIVE</span><strong>{mission.name}</strong><p>{mission.activity||mission.detail||label(mission.status)}</p></div>}
   <section className="layout">
    <div className="world-card">
-    <PhaserWorld agents={agents} selectedId={focus} onSelect={selectAgent} director={director}/>
-    <footer className="legend"><span>TRASCINA = sposta la camera</span><span>ROTELLINA = zoom</span><span>CLICCA = segui un’AI</span><span>Punto 5 · quest manutentore</span></footer>
+    <PhaserWorld agents={agents} issues={issues.filter(issue=>!player.completedIssueIds.includes(issue.id))} selectedId={focus} onSelect={selectAgent} onSelectIssue={setSelectedIssue} director={director}/>
+    <footer className="legend"><span>TRASCINA = camera</span><span>ROTELLINA = zoom</span><span>CLICCA AI = segui</span><span>AURA CLIENTE = urgenza · fumetto = problema</span><span>Punto 5 · quest manutentore</span></footer>
    </div>
    <aside className="sidebar">
     <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} onAction={act}/>

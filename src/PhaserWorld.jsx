@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import './phaser-world.css'
 
-export function PhaserWorld({ agents, selectedId, onSelect, director }) {
+export function PhaserWorld({ agents, issues = [], selectedId, onSelect, onSelectIssue, director }) {
   const hostRef = useRef(null)
   const gameRef = useRef(null)
   const sceneRef = useRef(null)
@@ -13,7 +13,9 @@ export function PhaserWorld({ agents, selectedId, onSelect, director }) {
       if (disposed || !hostRef.current) return
       gameRef.current = createLivingWorldGame(hostRef.current, {
         agents,
+        issues,
         onSelect,
+        onSelectIssue,
         onSceneReady: scene => { sceneRef.current = scene },
       })
     })
@@ -31,6 +33,12 @@ export function PhaserWorld({ agents, selectedId, onSelect, director }) {
     sceneRef.current = scene
     scene.setAgents(agents)
   }, [agents])
+
+  useEffect(() => {
+    const scene = sceneRef.current || gameRef.current?.scene.getScene('LivingWorld')
+    if (!scene || !scene.sys?.isActive()) return
+    scene.setClients(issues)
+  }, [issues])
 
   useEffect(() => {
     const scene = sceneRef.current || gameRef.current?.scene.getScene('LivingWorld')

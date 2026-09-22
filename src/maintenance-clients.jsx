@@ -35,13 +35,16 @@ export function useMaintenanceClients(user){
   return issues
 }
 
+import { problemEmoji } from './pixel-sprites.js'
+
 export function MaintenanceClient({issue,index,onSelect}){
   const p=npcPosition(issue,index)
   const urgency=String(issue.urgenza||'media')
   const state=String(issue.stato||'todo')
-  const mood=urgency==='alta'?'!':urgency==='bassa'?'·':'?'
-  return <button className={'client client--'+state+' client--'+urgency} style={{'--cx':p.x+'%','--cy':p.y+'%'}} onClick={()=>onSelect(issue)}>
-    <span className="client-mood">{mood}</span>
+  const emoji=problemEmoji(issue)
+  return <button className={'client client--'+state+' client--'+urgency} style={{'--cx':p.x+'%','--cy':p.y+'%'}} onClick={()=>onSelect(issue)} title={`${issue.categoria||'manutenzione'} · ${urgency}`}>
+    <span className="client-aura" aria-hidden="true"/>
+    <span className="client-mood">{emoji}</span>
     <span className="client-head"/>
     <span className="client-body"/>
     <span className="client-legs"/>
