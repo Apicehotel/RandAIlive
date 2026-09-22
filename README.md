@@ -115,6 +115,8 @@ La Fase 4 collega il movimento alla stessa mappa: gli agenti usano i centri dell
 
 Il punto 8 è il passaggio grafico della hall: pavimenti a piastrelle, bordi luminosi, lampade, wayfinding, profondità del fondale, pedane e badge degli NPC rendono leggibili stanze e ruoli a colpo d'occhio. Il concept visivo è quello della hall futuristica Apicehotel: blu notte, ciano, oro e accenti per agente. Il renderer resta data-driven e procedurale per non bloccare il freeze: in una fase asset successiva ogni decorazione potrà essere sostituita da sprite/tileset mantenendo invariati `hall-map.json`, quest e runtime.
 
+Il punto 9 alza la leggibilità verso i fogli concept: ogni AI ha un look procedurale distinto (cappello/prop del ruolo), le stanze usano branding Rand (RandMind, RandUI, RandOps…), i clienti-segnalazione compaiono nella scena Phaser con aura di agitazione per urgenza e fumetto emoji sul tipo di problema. Gli sprite sheet artistici definitivi restano il passaggio successivo.
+
 ## 8-bit Hubble
 
 Il progetto prende ispirazione solo dal concetto di sprite, layer, palette e proceduralità. Non incorpora codice di `amcajal/8_bit_hubble`.
