@@ -1,27 +1,647 @@
 {
-  "type": "map",
-  "version": "1.10",
-  "tiledversion": "1.11.0",
+  "compressionlevel": -1,
+  "height": 30,
+  "width": 50,
+  "infinite": false,
+  "nextlayerid": 6,
+  "nextobjectid": 500,
   "orientation": "orthogonal",
   "renderorder": "right-down",
-  "width": 40,
-  "height": 24,
-  "tilewidth": 32,
+  "tiledversion": "1.10.2",
   "tileheight": 32,
+  "tilewidth": 32,
+  "type": "map",
+  "version": "1.10",
   "layers": [
     {
       "id": 1,
       "name": "rooms",
       "type": "objectgroup",
       "objects": [
-        { "id": 1, "name": "reception", "type": "room", "x": 32, "y": 64, "width": 256, "height": 160, "properties": [{ "name": "title", "type": "string", "value": "RECEPTION" }, { "name": "subtitle", "type": "string", "value": "CHECK IN · QUESTS" }, { "name": "palette", "type": "string", "value": "reception" }] },
-        { "id": 2, "name": "knowledge", "type": "room", "x": 32, "y": 288, "width": 320, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "RANDMIND" }, { "name": "subtitle", "type": "string", "value": "REMEMBER · ORGANIZE · ENRICH" }, { "name": "palette", "type": "string", "value": "knowledge" }] },
-        { "id": 3, "name": "design", "type": "room", "x": 32, "y": 512, "width": 320, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "RANDUI" }, { "name": "subtitle", "type": "string", "value": "DESIGN · SIMPLIFY · DELIGHT" }, { "name": "palette", "type": "string", "value": "design" }] },
-        { "id": 4, "name": "radar", "type": "room", "x": 928, "y": 64, "width": 320, "height": 160, "properties": [{ "name": "title", "type": "string", "value": "RANDRADAR" }, { "name": "subtitle", "type": "string", "value": "SCAN · DISCOVER · ALERT" }, { "name": "palette", "type": "string", "value": "radar" }] },
-        { "id": 5, "name": "ops", "type": "room", "x": 896, "y": 288, "width": 352, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "RANDOPS" }, { "name": "subtitle", "type": "string", "value": "DEPLOY · OPERATE · SCALE" }, { "name": "palette", "type": "string", "value": "ops" }] },
-        { "id": 6, "name": "qa", "type": "room", "x": 928, "y": 512, "width": 320, "height": 192, "properties": [{ "name": "title", "type": "string", "value": "RANDTEST" }, { "name": "subtitle", "type": "string", "value": "TEST · VERIFY · IMPROVE" }, { "name": "palette", "type": "string", "value": "qa" }] },
-        { "id": 7, "name": "coffee", "type": "room", "x": 512, "y": 576, "width": 320, "height": 128, "properties": [{ "name": "title", "type": "string", "value": "COFFEE SHOP" }, { "name": "subtitle", "type": "string", "value": "CHAT · RECHARGE" }, { "name": "palette", "type": "string", "value": "coffee" }] },
-        { "id": 8, "name": "hub", "type": "hub", "x": 512, "y": 256, "width": 256, "height": 256, "properties": [{ "name": "title", "type": "string", "value": "RANDAPP HUB" }, { "name": "subtitle", "type": "string", "value": "CONNECT · LEARN · GROW" }] }
+        {
+          "id": 1,
+          "name": "reception",
+          "type": "room",
+          "x": 32,
+          "y": 64,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "RECEPTION"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CHECK IN · QUESTS"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "bar",
+          "type": "room",
+          "x": 296,
+          "y": 64,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "BAR & LOUNGE"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "COFFEE · SOCIAL"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "coffee"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "breakfast",
+          "type": "room",
+          "x": 560,
+          "y": 64,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "SALA COLAZIONE"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "SERVICE · GUESTS"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "coffee"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "kitchen",
+          "type": "room",
+          "x": 824,
+          "y": 64,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "CUCINA"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "FOOD · SERVICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "ops"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "name": "congress",
+          "type": "room",
+          "x": 1088,
+          "y": 64,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "SALA CONGRESSI"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "EVENTS · STAGE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "design"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "name": "meeting",
+          "type": "room",
+          "x": 1352,
+          "y": 64,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "SALE MEETING"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "PLANNING · EVENTS"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "knowledge"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "name": "jazz1",
+          "type": "room",
+          "x": 32,
+          "y": 272,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "JAZZ · PIANO 1"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "name": "jazz2",
+          "type": "room",
+          "x": 296,
+          "y": 272,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "JAZZ · PIANO 2"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "name": "jazz3",
+          "type": "room",
+          "x": 560,
+          "y": 272,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "JAZZ · PIANO 3"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "name": "jazz4",
+          "type": "room",
+          "x": 824,
+          "y": 272,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "JAZZ · PIANO 4"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "name": "spa",
+          "type": "room",
+          "x": 1088,
+          "y": 272,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "SPA & WELLNESS"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "RELAX · CARE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "knowledge"
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "gym",
+          "type": "room",
+          "x": 1352,
+          "y": 272,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "PALESTRA"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "FITNESS · WELLNESS"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "qa"
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "name": "wine5",
+          "type": "room",
+          "x": 32,
+          "y": 480,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "WINE · PIANO 5"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · 2 OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "radar"
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "name": "wine6",
+          "type": "room",
+          "x": 296,
+          "y": 480,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "WINE · PIANO 6"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · 2 OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "radar"
+            }
+          ]
+        },
+        {
+          "id": 15,
+          "name": "wine7",
+          "type": "room",
+          "x": 560,
+          "y": 480,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "WINE · PIANO 7"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · 2 OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "radar"
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "name": "wine8",
+          "type": "room",
+          "x": 824,
+          "y": 480,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "WINE · PIANO 8"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CAMERE · 2 OFFICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "radar"
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "name": "laundry",
+          "type": "room",
+          "x": 1088,
+          "y": 480,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "LAVANDERIA"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "BIANCHERIA · SERVICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "ops"
+            }
+          ]
+        },
+        {
+          "id": 18,
+          "name": "ironing",
+          "type": "room",
+          "x": 1352,
+          "y": 480,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "STIRERIA"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "BIANCHERIA · SERVICE"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "ops"
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "name": "warehouse",
+          "type": "room",
+          "x": 32,
+          "y": 688,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "MAGAZZINO"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "SCORTE · MATERIALI"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "knowledge"
+            }
+          ]
+        },
+        {
+          "id": 20,
+          "name": "technical",
+          "type": "room",
+          "x": 296,
+          "y": 688,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "AREA TECNICA"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "MAINTENANCE · SYSTEMS"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "ops"
+            }
+          ]
+        },
+        {
+          "id": 21,
+          "name": "staff",
+          "type": "room",
+          "x": 560,
+          "y": 688,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "SPOGLIATOI STAFF"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "TEAM · SHIFT"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "qa"
+            }
+          ]
+        },
+        {
+          "id": 22,
+          "name": "exterior",
+          "type": "room",
+          "x": 824,
+          "y": 688,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "INGRESSO & PARCHEGGIO"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "ARRIVALS · SECURITY"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 23,
+          "name": "lobby",
+          "type": "room",
+          "x": 1088,
+          "y": 688,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "LOBBY"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "GUESTS · FLOW"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 24,
+          "name": "hub",
+          "type": "hub",
+          "x": 1352,
+          "y": 688,
+          "width": 216,
+          "height": 144,
+          "properties": [
+            {
+              "name": "title",
+              "type": "string",
+              "value": "RANDAPP HUB"
+            },
+            {
+              "name": "subtitle",
+              "type": "string",
+              "value": "CONNECT · LEARN · GROW"
+            },
+            {
+              "name": "palette",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        }
       ]
     },
     {
@@ -29,16 +649,249 @@
       "name": "collision",
       "type": "objectgroup",
       "objects": [
-        { "id": 101, "name": "north-wall", "type": "wall", "x": 0, "y": 0, "width": 1280, "height": 32 },
-        { "id": 102, "name": "south-wall", "type": "wall", "x": 0, "y": 736, "width": 1280, "height": 32 },
-        { "id": 103, "name": "west-wall", "type": "wall", "x": 0, "y": 0, "width": 32, "height": 768 },
-        { "id": 104, "name": "east-wall", "type": "wall", "x": 1248, "y": 0, "width": 32, "height": 768 },
-        { "id": 105, "name": "reception-wall", "type": "wall", "x": 32, "y": 224, "width": 256, "height": 12 },
-        { "id": 106, "name": "library-wall", "type": "wall", "x": 32, "y": 480, "width": 320, "height": 12 },
-        { "id": 107, "name": "design-wall", "type": "wall", "x": 32, "y": 704, "width": 320, "height": 12 },
-        { "id": 108, "name": "radar-wall", "type": "wall", "x": 928, "y": 224, "width": 320, "height": 12 },
-        { "id": 109, "name": "ops-wall", "type": "wall", "x": 896, "y": 480, "width": 352, "height": 12 },
-        { "id": 110, "name": "qa-wall", "type": "wall", "x": 928, "y": 704, "width": 320, "height": 12 }
+        {
+          "id": 101,
+          "name": "north-wall",
+          "type": "wall",
+          "x": 0,
+          "y": 0,
+          "width": 1600,
+          "height": 32
+        },
+        {
+          "id": 102,
+          "name": "south-wall",
+          "type": "wall",
+          "x": 0,
+          "y": 928,
+          "width": 1600,
+          "height": 32
+        },
+        {
+          "id": 103,
+          "name": "west-wall",
+          "type": "wall",
+          "x": 0,
+          "y": 0,
+          "width": 32,
+          "height": 960
+        },
+        {
+          "id": 104,
+          "name": "east-wall",
+          "type": "wall",
+          "x": 1568,
+          "y": 0,
+          "width": 32,
+          "height": 960
+        },
+        {
+          "id": 110,
+          "name": "reception-wall",
+          "type": "wall",
+          "x": 32,
+          "y": 208,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 111,
+          "name": "bar-wall",
+          "type": "wall",
+          "x": 296,
+          "y": 208,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 112,
+          "name": "breakfast-wall",
+          "type": "wall",
+          "x": 560,
+          "y": 208,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 113,
+          "name": "kitchen-wall",
+          "type": "wall",
+          "x": 824,
+          "y": 208,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 114,
+          "name": "congress-wall",
+          "type": "wall",
+          "x": 1088,
+          "y": 208,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 115,
+          "name": "meeting-wall",
+          "type": "wall",
+          "x": 1352,
+          "y": 208,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 116,
+          "name": "jazz1-wall",
+          "type": "wall",
+          "x": 32,
+          "y": 416,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 117,
+          "name": "jazz2-wall",
+          "type": "wall",
+          "x": 296,
+          "y": 416,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 118,
+          "name": "jazz3-wall",
+          "type": "wall",
+          "x": 560,
+          "y": 416,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 119,
+          "name": "jazz4-wall",
+          "type": "wall",
+          "x": 824,
+          "y": 416,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 120,
+          "name": "spa-wall",
+          "type": "wall",
+          "x": 1088,
+          "y": 416,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 121,
+          "name": "gym-wall",
+          "type": "wall",
+          "x": 1352,
+          "y": 416,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 122,
+          "name": "wine5-wall",
+          "type": "wall",
+          "x": 32,
+          "y": 624,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 123,
+          "name": "wine6-wall",
+          "type": "wall",
+          "x": 296,
+          "y": 624,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 124,
+          "name": "wine7-wall",
+          "type": "wall",
+          "x": 560,
+          "y": 624,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 125,
+          "name": "wine8-wall",
+          "type": "wall",
+          "x": 824,
+          "y": 624,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 126,
+          "name": "laundry-wall",
+          "type": "wall",
+          "x": 1088,
+          "y": 624,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 127,
+          "name": "ironing-wall",
+          "type": "wall",
+          "x": 1352,
+          "y": 624,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 128,
+          "name": "warehouse-wall",
+          "type": "wall",
+          "x": 32,
+          "y": 832,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 129,
+          "name": "technical-wall",
+          "type": "wall",
+          "x": 296,
+          "y": 832,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 130,
+          "name": "staff-wall",
+          "type": "wall",
+          "x": 560,
+          "y": 832,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 131,
+          "name": "exterior-wall",
+          "type": "wall",
+          "x": 824,
+          "y": 832,
+          "width": 216,
+          "height": 8
+        },
+        {
+          "id": 132,
+          "name": "lobby-wall",
+          "type": "wall",
+          "x": 1088,
+          "y": 832,
+          "width": 216,
+          "height": 8
+        }
       ]
     },
     {
@@ -46,13 +899,222 @@
       "name": "doors",
       "type": "objectgroup",
       "objects": [
-        { "id": 201, "name": "reception-door", "type": "door", "x": 144, "y": 224, "width": 48, "height": 12 },
-        { "id": 202, "name": "library-door", "type": "door", "x": 176, "y": 480, "width": 48, "height": 12 },
-        { "id": 203, "name": "design-door", "type": "door", "x": 176, "y": 704, "width": 48, "height": 12 },
-        { "id": 204, "name": "radar-door", "type": "door", "x": 1056, "y": 224, "width": 48, "height": 12 },
-        { "id": 205, "name": "ops-door", "type": "door", "x": 1048, "y": 480, "width": 48, "height": 12 },
-        { "id": 206, "name": "qa-door", "type": "door", "x": 1056, "y": 704, "width": 48, "height": 12 },
-        { "id": 207, "name": "coffee-door", "type": "door", "x": 648, "y": 576, "width": 48, "height": 12 }
+        {
+          "id": 200,
+          "name": "reception-door",
+          "type": "door",
+          "x": 116,
+          "y": 202,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 201,
+          "name": "bar-door",
+          "type": "door",
+          "x": 380,
+          "y": 202,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 202,
+          "name": "breakfast-door",
+          "type": "door",
+          "x": 644,
+          "y": 202,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 203,
+          "name": "kitchen-door",
+          "type": "door",
+          "x": 908,
+          "y": 202,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 204,
+          "name": "congress-door",
+          "type": "door",
+          "x": 1172,
+          "y": 202,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 205,
+          "name": "meeting-door",
+          "type": "door",
+          "x": 1436,
+          "y": 202,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 206,
+          "name": "jazz1-door",
+          "type": "door",
+          "x": 116,
+          "y": 410,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 207,
+          "name": "jazz2-door",
+          "type": "door",
+          "x": 380,
+          "y": 410,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 208,
+          "name": "jazz3-door",
+          "type": "door",
+          "x": 644,
+          "y": 410,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 209,
+          "name": "jazz4-door",
+          "type": "door",
+          "x": 908,
+          "y": 410,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 210,
+          "name": "spa-door",
+          "type": "door",
+          "x": 1172,
+          "y": 410,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 211,
+          "name": "gym-door",
+          "type": "door",
+          "x": 1436,
+          "y": 410,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 212,
+          "name": "wine5-door",
+          "type": "door",
+          "x": 116,
+          "y": 618,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 213,
+          "name": "wine6-door",
+          "type": "door",
+          "x": 380,
+          "y": 618,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 214,
+          "name": "wine7-door",
+          "type": "door",
+          "x": 644,
+          "y": 618,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 215,
+          "name": "wine8-door",
+          "type": "door",
+          "x": 908,
+          "y": 618,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 216,
+          "name": "laundry-door",
+          "type": "door",
+          "x": 1172,
+          "y": 618,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 217,
+          "name": "ironing-door",
+          "type": "door",
+          "x": 1436,
+          "y": 618,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 218,
+          "name": "warehouse-door",
+          "type": "door",
+          "x": 116,
+          "y": 826,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 219,
+          "name": "technical-door",
+          "type": "door",
+          "x": 380,
+          "y": 826,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 220,
+          "name": "staff-door",
+          "type": "door",
+          "x": 644,
+          "y": 826,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 221,
+          "name": "exterior-door",
+          "type": "door",
+          "x": 908,
+          "y": 826,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 222,
+          "name": "lobby-door",
+          "type": "door",
+          "x": 1172,
+          "y": 826,
+          "width": 48,
+          "height": 12
+        },
+        {
+          "id": 223,
+          "name": "hub-door",
+          "type": "door",
+          "x": 1436,
+          "y": 826,
+          "width": 48,
+          "height": 12
+        }
       ]
     },
     {
@@ -60,16 +1122,76 @@
       "name": "spawns",
       "type": "objectgroup",
       "objects": [
-        { "id": 301, "name": "randai", "type": "spawn", "x": 430, "y": 320 },
-        { "id": 302, "name": "randbrain", "type": "spawn", "x": 500, "y": 320 },
-        { "id": 303, "name": "randcore", "type": "spawn", "x": 570, "y": 320 },
-        { "id": 304, "name": "randmind", "type": "spawn", "x": 710, "y": 320 },
-        { "id": 305, "name": "randradar", "type": "spawn", "x": 780, "y": 320 },
-        { "id": 306, "name": "randresearch", "type": "spawn", "x": 430, "y": 500 },
-        { "id": 307, "name": "randsecure", "type": "spawn", "x": 500, "y": 500 },
-        { "id": 308, "name": "randtest", "type": "spawn", "x": 570, "y": 500 },
-        { "id": 309, "name": "randops", "type": "spawn", "x": 710, "y": 500 },
-        { "id": 310, "name": "randui", "type": "spawn", "x": 780, "y": 500 }
+        {
+          "id": 300,
+          "name": "randai",
+          "type": "spawn",
+          "x": 140,
+          "y": 145
+        },
+        {
+          "id": 301,
+          "name": "randbrain",
+          "type": "spawn",
+          "x": 1450,
+          "y": 145
+        },
+        {
+          "id": 302,
+          "name": "randcore",
+          "type": "spawn",
+          "x": 1460,
+          "y": 760
+        },
+        {
+          "id": 303,
+          "name": "randmind",
+          "type": "spawn",
+          "x": 140,
+          "y": 760
+        },
+        {
+          "id": 304,
+          "name": "randradar",
+          "type": "spawn",
+          "x": 930,
+          "y": 760
+        },
+        {
+          "id": 305,
+          "name": "randresearch",
+          "type": "spawn",
+          "x": 1190,
+          "y": 145
+        },
+        {
+          "id": 306,
+          "name": "randsecure",
+          "type": "spawn",
+          "x": 1180,
+          "y": 760
+        },
+        {
+          "id": 307,
+          "name": "randtest",
+          "type": "spawn",
+          "x": 405,
+          "y": 760
+        },
+        {
+          "id": 308,
+          "name": "randops",
+          "type": "spawn",
+          "x": 410,
+          "y": 760
+        },
+        {
+          "id": 309,
+          "name": "randui",
+          "type": "spawn",
+          "x": 400,
+          "y": 145
+        }
       ]
     },
     {
@@ -77,15 +1199,92 @@
       "name": "decorations",
       "type": "objectgroup",
       "objects": [
-        { "id": 401, "name": "reception-desk", "type": "desk", "x": 72, "y": 136, "width": 176, "height": 48, "properties": [{ "name": "style", "type": "string", "value": "reception" }] },
-        { "id": 402, "name": "library-shelves", "type": "shelves", "x": 64, "y": 340, "width": 256, "height": 92 },
-        { "id": 403, "name": "design-table", "type": "table", "x": 104, "y": 586, "width": 176, "height": 64 },
-        { "id": 404, "name": "radar-screen", "type": "screen", "x": 1000, "y": 112, "width": 176, "height": 72 },
-        { "id": 405, "name": "ops-console", "type": "terminal", "x": 948, "y": 350, "width": 240, "height": 72 },
-        { "id": 406, "name": "qa-bench", "type": "table", "x": 972, "y": 586, "width": 208, "height": 64 },
-        { "id": 407, "name": "coffee-table", "type": "table", "x": 568, "y": 620, "width": 184, "height": 54 },
-        { "id": 408, "name": "library-plant", "type": "plant", "x": 288, "y": 430, "width": 34, "height": 42 },
-        { "id": 409, "name": "coffee-plant", "type": "plant", "x": 782, "y": 626, "width": 34, "height": 42 }
+        {
+          "id": 401,
+          "name": "reception-desk",
+          "type": "desk",
+          "x": 68,
+          "y": 128,
+          "width": 144,
+          "height": 42,
+          "properties": [
+            {
+              "name": "style",
+              "type": "string",
+              "value": "reception"
+            }
+          ]
+        },
+        {
+          "id": 402,
+          "name": "bar-table",
+          "type": "table",
+          "x": 334,
+          "y": 128,
+          "width": 132,
+          "height": 42
+        },
+        {
+          "id": 403,
+          "name": "breakfast-table",
+          "type": "table",
+          "x": 594,
+          "y": 128,
+          "width": 140,
+          "height": 42
+        },
+        {
+          "id": 404,
+          "name": "congress-screen",
+          "type": "screen",
+          "x": 1120,
+          "y": 110,
+          "width": 150,
+          "height": 58
+        },
+        {
+          "id": 405,
+          "name": "meeting-table",
+          "type": "table",
+          "x": 1382,
+          "y": 126,
+          "width": 150,
+          "height": 46
+        },
+        {
+          "id": 406,
+          "name": "technical-console",
+          "type": "terminal",
+          "x": 322,
+          "y": 742,
+          "width": 150,
+          "height": 56,
+          "properties": [
+            {
+              "name": "style",
+              "type": "string",
+              "value": "ops"
+            }
+          ]
+        },
+        {
+          "id": 407,
+          "name": "lobby-plant",
+          "type": "plant",
+          "x": 1260,
+          "y": 762,
+          "width": 34,
+          "height": 42
+        },
+        {
+          "id": 408,
+          "name": "hub-screen",
+          "type": "screen",
+          "x": 1390,
+          "y": 740,
+          "width": 140,
+          "height": 56
+        }
       ]
     }
   ]
