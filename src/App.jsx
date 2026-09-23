@@ -3,7 +3,7 @@ import { RANDAILIVE_HOTEL_ID, supabase } from './supabase.js'
 import { zoneFor } from './behavior-engine.js'
 import { MaintenancePanel, useMaintenanceClients } from './maintenance-clients.jsx'
 import { GameHud } from './GameHud.jsx'
-import { loadGameState, performAction, saveGameState } from './game-engine.js'
+import { loadGameState, performAction, registerMaintenanceQuest, saveGameState, visitArea } from './game-engine.js'
 import { PhaserWorld } from './PhaserWorld.jsx'
 import { finishQuest, loadPlayerState, savePlayerState, startQuest } from './player-quests.js'
 import { signInMaintainer, signOutMaintainer, useMaintainerAuth } from './maintainer-auth.jsx'
@@ -47,7 +47,7 @@ export default function App(){
  const counts=useMemo(()=>agents.reduce((m,a)=>(m[a.status]=(m[a.status]||0)+1,m),{}),[agents])
  const selected=agents.find(a=>a.id===focus)||null
  const gameAgent=agents.find(a=>a.id===game.selected)||agents[0]
- const selectAgent=(id)=>{setFocus(id);setGame(previous=>({...previous,selected:id}))}
+ const selectAgent=(id)=>{const agent=agents.find(item=>item.id===id);setFocus(id);setGame(previous=>visitArea({...previous,selected:id},agent?.life?.id))}
  const act=(action)=>setGame(previous=>performAction(previous,gameAgent.id,action,gameAgent.name))
  const startPlayerQuest=async(issue)=>{
   if(!user)return
@@ -59,7 +59,7 @@ export default function App(){
   if(!user)return
   const {error}=await supabase.from('segnalazioni').update({stato:'done',completato_da:user.email||player.name,completato_il:new Date().toISOString(),nota_completamento:'Completata da RandAILive'}).eq('id',issue.id).eq('hotel_id',RANDAILIVE_HOTEL_ID).select('id').single()
   if(error){setQuestMessage(`Completamento non autorizzato: ${error.message}`);return}
-  setPlayer(previous=>finishQuest(previous,issue));setQuestMessage(`Quest completata da ${user.email||player.name}. Aggiornata su RandApp.`)
+  setPlayer(previous=>finishQuest(previous,issue));setGame(previous=>registerMaintenanceQuest(previous,true));setQuestMessage(`Quest completata da ${user.email||player.name}. Aggiornata su RandApp.`)
  }
  const login=async(event)=>{event.preventDefault();const form=new FormData(event.currentTarget);const {error}=await signInMaintainer(String(form.get('email')||''),String(form.get('password')||''));setQuestMessage(error?`Accesso negato: ${error.message}`:'Accesso manutentore riuscito.');if(!error)event.currentTarget.reset()}
  const mission=agents.find(a=>a.status==='ERROR')||agents.find(a=>a.status==='RUNNING')||agents.find(a=>a.status==='WAITING_APPROVAL')||null
@@ -74,9 +74,9 @@ export default function App(){
     <footer className="legend"><span>TRASCINA = camera</span><span>ROTELLINA = zoom</span><span>CLICCA AI = segui</span><span>AURA CLIENTE = urgenza · fumetto = problema</span><span>Punto 5 · quest manutentore</span></footer>
    </div>
    <aside className="sidebar">
-    <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} onAction={act}/>
+    <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} hotel={game.hotel} onAction={act}/>
     <section className="panel"><header><strong>Regia</strong><span>{selected?'FOLLOW':'FREE CAM'}</span></header>{selected?<div className="profile"><div className="profile-icon" style={{'--tone':selected.tone}}>{selected.glyph}</div><h2>{selected.name}</h2><p>{selected.life.action}</p><small>{selected.life.label}</small><b>{label(selected.status)}</b><button onClick={()=>setFocus(null)}>Smetti di seguire</button></div>:<p className="empty">Tocca un agente nella hall.</p>}</section>
-    <section className="panel"><header><strong>Vita nella hall</strong><span>12s CYCLE</span></header>{agents.map(a=><button className="life-row" key={a.id} onClick={()=>setFocus(a.id)}><i style={{background:a.tone}}/><span><b>{a.name}</b><small>{a.life.action}</small></span><em>{a.life.label}</em></button>)}</section>
+    <section className="panel"><header><strong>Vita nell’Hotel Giò</strong><span>12s CYCLE</span></header>{agents.map(a=><button className="life-row" key={a.id} onClick={()=>setFocus(a.id)}><i style={{background:a.tone}}/><span><b>{a.name}</b><small>{a.life.action}</small></span><em>{a.life.label}</em></button>)}</section>
     <section className="panel"><header><strong>Incontri</strong><span>{encounters.length}</span></header>{encounters.length?encounters.map((g,i)=><div className="event" key={i}><div><b>{g.map(a=>a.name).join(' + ')}</b><p>si sono incontrati in {g[0].life.label}</p></div></div>):<p className="empty">Nessun incontro in questo momento.</p>}</section>
     <section className="panel player-panel"><header><strong>Giocatore manutentore</strong><span>{user?.email||player.name}</span></header><p className="empty">Le AI sono NPC. Tu prendi le quest dei clienti e le svolgi.</p>{player.activeIssueId&&<p className="quest-active">Quest attiva: {issues.find(issue=>issue.id===player.activeIssueId)?.camera||'segnalazione'}</p>}</section>
     <section className="maintainer-auth"><h3>Accesso operativo</h3>{authLoading?<p>Verifica sessione…</p>:user?<div className="auth-user"><span className="auth-ok">Autenticato · {user.email}</span><button onClick={signOutMaintainer}>Esci</button></div>:<form onSubmit={login}><input name="email" type="email" autoComplete="username" placeholder="Email manutentore" required/><input name="password" type="password" autoComplete="current-password" placeholder="Password" required/><button type="submit">Accedi per sincronizzare</button><p>Hotel operativo: {RANDAILIVE_HOTEL_ID}. Senza sessione non vengono mostrate né modificate segnalazioni.</p></form>}</section>
