@@ -144,3 +144,14 @@ Il punto 9 alza la leggibilità verso i fogli concept: ogni AI ha un look proced
 ## 8-bit Hubble
 
 Il progetto prende ispirazione solo dal concetto di sprite, layer, palette e proceduralità. Non incorpora codice di `amcajal/8_bit_hubble`.
+
+
+## Hotel Giò game world v1
+
+Il gioco non è più limitato alla sola hall concettuale: il modello di mondo comprende l'Hotel Giò come struttura giocabile, con piano terra, aree congressuali, quattro piani Jazz, quattro piani Wine, servizi tecnici e aree esterne.
+
+Aree canoniche: reception, lobby, bar/lounge, sala colazione, cucina, sala congressi, sale meeting, RandApp Hub, spa, palestra, piani Jazz 1-4, piani Wine 5-8, lavanderia, stireria, magazzino, area tecnica, spogliatoi staff e ingresso/parcheggio.
+
+Il ciclo di gioco v1 aggiunge turno, evento giornaliero deterministico, reputazione hotel, servizio, sicurezza, pulizia, umore ospiti, crediti, aree visitate e catena di obiettivi. Le azioni AI sono Esplora, Allena, Aiuta, Ispeziona e Riposa; le quest manutenzione reali continuano a usare Supabase e, quando completate, alimentano anche la progressione locale del gioco.
+
+Il modello del mondo è in `src/hotel-world.js`. `src/behavior-engine.js` usa le aree Hotel Giò come destinazioni degli agenti, mentre `src/game-engine.js` conserva il loop di progressione senza modificare lo stato operativo delle AI.
