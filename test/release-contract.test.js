@@ -52,11 +52,11 @@ test('phase 2 hall is driven by a Tiled-compatible object map', () => {
 
   assert.equal(map.orientation, 'orthogonal')
   assert.deepEqual(layerNames, ['rooms', 'collision', 'doors', 'spawns', 'decorations'])
-  assert.equal(rooms.filter(room => room.type === 'room').length, 7)
+  assert.equal(rooms.filter(room => room.type === 'room').length, 23)
   assert.equal(rooms.filter(room => room.type === 'hub').length, 1)
   assert.equal(spawns.length, 10)
   assert.ok(map.layers.find(layer => layer.name === 'collision').objects.length >= 10)
-  assert.ok(map.layers.find(layer => layer.name === 'doors').objects.length >= 7)
+  assert.ok(map.layers.find(layer => layer.name === 'doors').objects.length >= 24)
   const decorations = map.layers.find(layer => layer.name === 'decorations').objects
   assert.ok(decorations.length >= 8)
   assert.ok(decorations.some(item => item.type === 'shelves'))
