@@ -6,3 +6,41 @@
  .game-panel{border-color:#2c7c9f;box-shadow:0 0 18px #19dfff18}.game-agent-head{display:flex;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #173a59;background:linear-gradient(90deg,#0d2941,#0a1728)}.game-avatar{width:48px;height:48px;display:grid;place-items:center;border:2px solid var(--tone);background:#081521;font-size:21px;box-shadow:0 0 16px color-mix(in srgb,var(--tone) 45%,transparent)}.game-agent-head h2{margin:0;color:#f0fbff;font-size:15px}.game-agent-head p,.game-agent-head small{display:block;margin:3px 0 0;font-size:7px;color:#9bc4d8}.game-agent-head small{color:#75e4c0}.game-stat{padding:7px 11px 0;font-size:8px}.game-stat span,.xp-line{display:flex;justify-content:space-between;color:#c7deeb}.game-stat b,.xp-line b{color:#77e8ff;font-size:7px}.game-stat>i,.xp-track{display:block;height:6px;margin-top:4px;border:1px solid #225477;background:#071421;overflow:hidden}.game-stat em,.xp-track i{display:block;height:100%;background:#28d6ed;box-shadow:0 0 8px #28d6ed88}.game-stat>i.mood em{background:#ffc44f;box-shadow:0 0 8px #ffc44f88}.game-stat>i.knowledge em{background:#b481ff;box-shadow:0 0 8px #b481ff88}.xp-line{padding:10px 11px 0;font-size:7px}.xp-track{margin:4px 11px 10px}.xp-track i{background:#b481ff;box-shadow:0 0 8px #b481ff88}.quest-box{margin:0 10px 10px;padding:9px;border:1px solid #92742d;background:#29210e}.quest-box strong{display:block;color:#ffd05c;font-size:8px}.quest-box b{display:block;margin-top:5px;font-size:9px}.quest-box p{margin:4px 0;color:#b8ccda;font-size:7px;line-height:1.4}.quest-box small{font-size:7px;color:#83e7c1}.game-actions{display:grid;gap:6px;padding:0 10px}.game-action{padding:8px 9px;border:1px solid #24d8ed;background:#0b3148;color:#dffaff;text-align:left;cursor:pointer;font:inherit}.game-action:hover{filter:brightness(1.25);transform:translateX(2px)}.game-action strong,.game-action small{display:block}.game-action strong{font-size:9px}.game-action small{margin-top:3px;color:#9ed6e8;font-size:7px}.game-action--train{border-color:#ffbe3f;background:#34250d}.game-action--rest{border-color:#a98bff;background:#201742}.inventory{display:flex;gap:10px;align-items:center;padding:10px;font-size:7px;color:#86b5c9}.inventory span{margin-right:auto}.inventory b{font-size:8px;color:#f8d676}.game-log{border-top:1px solid #173a59;padding:7px 10px;background:#07121f}.game-log p{margin:3px 0;font-size:7px;line-height:1.35;color:#86aabd}.game-log p:first-child{color:#ccecf8}@media(max-width:680px){.game-actions{grid-template-columns:repeat(3,1fr)}.game-action{padding:7px 5px;text-align:center}.game-action small{font-size:6px}.game-agent-head{padding:9px}.game-stat{padding-top:5px}}
 
 .client{isolation:isolate}.client-aura{position:absolute;left:50%;top:58%;width:42px;height:42px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:0;opacity:.55;animation:auraPulse 1.4s ease-in-out infinite}.client--bassa .client-aura{background:radial-gradient(circle,#4fdbe888 0%,transparent 70%);animation-duration:2.2s}.client--media .client-aura{background:radial-gradient(circle,#ffc14f99 0%,transparent 70%)}.client--alta .client-aura{background:radial-gradient(circle,#ff3b4acc 0%,transparent 72%);animation:auraPanic .45s steps(2,end) infinite}.client-mood{z-index:2;width:24px;height:22px;border-radius:6px 6px 6px 2px;font-size:12px;font-weight:700;background:#fff;color:#111;border:2px solid #222}.client--alta .client-mood{border-color:#ff3b4a;box-shadow:0 0 10px #ff3b4a88}.client--media .client-mood{border-color:#ffc14f}.client--bassa .client-mood{border-color:#4fdbe8}@keyframes auraPulse{50%{transform:translate(-50%,-50%) scale(1.18);opacity:.85}}@keyframes auraPanic{0%{transform:translate(-52%,-50%) scale(1)}100%{transform:translate(-48%,-50%) scale(1.25)}}
+
+
+/* Hotel Gio game world v1 */
+.hotel-status{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin:10px 0 12px;
+}
+.hotel-status>div{
+  min-width:0;
+  padding:8px 9px;
+  border:1px solid rgba(103,217,255,.2);
+  background:rgba(7,17,31,.72);
+  border-radius:8px;
+}
+.hotel-status span,.hotel-status b{display:block}
+.hotel-status span{
+  color:#83a9bd;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.hotel-status b{
+  margin-top:3px;
+  color:#f5fbff;
+  font-size:11px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.game-actions{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+@media (max-width:720px){
+  .hotel-status{grid-template-columns:1fr 1fr}
+  .game-actions{grid-template-columns:1fr 1fr}
+}
