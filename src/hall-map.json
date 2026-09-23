@@ -1284,6 +1284,22 @@
           "y": 740,
           "width": 140,
           "height": 56
+        },
+        {
+          "id": 409,
+          "name": "warehouse-shelves",
+          "type": "shelves",
+          "x": 62,
+          "y": 742,
+          "width": 138,
+          "height": 72,
+          "properties": [
+            {
+              "name": "style",
+              "type": "string",
+              "value": "knowledge"
+            }
+          ]
         }
       ]
     }
