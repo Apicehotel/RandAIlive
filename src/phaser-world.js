@@ -119,7 +119,7 @@ export class LivingWorldScene extends Phaser.Scene{
     for(const [aid,node] of this.agentNodes){
       const active=aid===id
       node.ring.setStrokeStyle(active?3:1,active?0xffffff:0x58dfff,active?1:.55)
-      node.container.setAlpha(this.director&&id&&!active?.55:1)
+      node.container.setAlpha(this.director && id && !active ? .55 : 1)
     }
   }
 
