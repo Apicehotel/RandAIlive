@@ -182,7 +182,7 @@ export class LivingWorldScene extends Phaser.Scene{
   }
   updateSelection(id){
     this.selectedId=id
-    for(const [aid,n] of this.agentNodes){const active=aid===id;n.ring.setStrokeStyle(active?3:1,active?0xffffff:0x55d8ff,active?1:.7);n.container.setAlpha(this.director&&id&&!active?.5:1)}
+    for(const [aid,n] of this.agentNodes){const active=aid===id;n.ring.setStrokeStyle(active?3:1,active?0xffffff:0x55d8ff,active?1:.7);n.container.setAlpha(this.director && id && !active ? .5 : 1)}
   }
   setDirector(v){this.director=v;this.updateSelection(this.selectedId)}
   update(time){
