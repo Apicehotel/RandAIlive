@@ -43,7 +43,7 @@ export default function App(){
  },[user])
  useEffect(()=>{saveGameState(game)},[game])
  useEffect(()=>{savePlayerState(player)},[player])
- const agents=useMemo(()=>{const byId=new Map(rows.map(r=>[String(r.agent_id||'').toLowerCase(),r]));return AGENTS.map(a=>{const row=byId.get(a.id)||{};const merged={...a,...row,status:deriveStatus(row,now)};return {...merged,life:zoneFor(merged,now)}})},[rows,now])
+ const agents=useMemo(()=>{const byId=new Map(rows.map(r=>[String(r.agent_id||'').toLowerCase(),r]));return AGENTS.map(a=>{const row=byId.get(a.id)||{};const merged={...a,...row,status:deriveStatus(row,now)};return {...merged,life:zoneFor(merged,now,{issues})}})},[rows,now,issues])
  const counts=useMemo(()=>agents.reduce((m,a)=>(m[a.status]=(m[a.status]||0)+1,m),{}),[agents])
  const selected=agents.find(a=>a.id===focus)||null
  const gameAgent=agents.find(a=>a.id===game.selected)||agents[0]
