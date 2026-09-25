@@ -169,3 +169,17 @@ RandAILive distingue ora esplicitamente ciò che è **LIVE** da ciò che è **SI
 - `src/living-runtime.js` è il confine destinato ai futuri eventi RandCore/MCP: la scena Phaser riceve intenzioni già normalizzate e non deve inventare attività.
 
 Principio: **nessun movimento operativo senza una causa tracciabile**. Il prossimo livello può collegare event stream RandCore, ledger e agent tool calls mantenendo invariato il renderer Phaser.
+
+
+## Visual overhaul · StarNet-inspired, Rand-owned
+
+La pipeline grafica adotta i principi tecnici osservati in StarNet senza incorporarne artwork, sprite, logo o identità visiva.
+
+- `hotel-visual-system.js` separa identità della stanza, materiale, luce e catalogo arredi dal renderer;
+- ogni area dell'Hotel Giò riceve una funzione visiva coerente (reception, bar, cucina, congressi, camere Jazz/Wine, lavanderia, area tecnica, magazzino, ecc.);
+- i pavimenti usano ricette procedurali diverse (parquet, terrazzo, marmo, tile, carpet, stone, rubber, concrete, tech);
+- gli arredi sono istanziati da un layout deterministico data-driven e restano sostituibili con sprite originali Rand;
+- il renderer aggiunge profondità alle stanze e illuminazione per ambiente, mantenendo Phaser come runtime;
+- la separazione modello → render permette in futuro un editor/refit, asset atlas, collisioni per prop e bake/cache senza cambiare la logica operativa.
+
+Principio di licenza: si riusano **pattern e codice MIT dove utile**, ma non gli asset artistici e il branding StarNet, che il progetto upstream dichiara esclusi dalla licenza del codice.

@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import hallMap from './hall-map.json'
 import { AGENT_LOOKS, clientLane, problemEmoji, urgencyAura } from './pixel-sprites.js'
+import { MATERIALS, propLayout, roomLight, visualForRoom } from './hotel-visual-system.js'
 
 export const WORLD_SIZE = { width: hallMap.width * hallMap.tilewidth, height: hallMap.height * hallMap.tileheight }
 
@@ -39,6 +40,131 @@ const roomPalette = {
 
 const toColor = tone => Phaser.Display.Color.HexStringToColor(tone || '#67d9ff').color
 
+function drawMaterialFloor(graphics, room, materialId) {
+  const mat=MATERIALS[materialId]||MATERIALS.terrazzo
+  const x=room.x+6,y=room.y+52,width=room.width-12,height=room.height-58
+  const cell=materialId==='parquet'?24:materialId==='tile'?18:materialId==='carpet'?12:20
+  graphics.fillStyle(mat.base,1).fillRect(x,y,width,height)
+  for(let row=0;row<height;row+=cell){
+    for(let col=0;col<width;col+=cell){
+      const alt=((col/cell)+(row/cell))%2===0
+      if(materialId==='parquet'){
+        graphics.fillStyle(alt?mat.base:mat.alt,1).fillRect(x+col,y+row,Math.min(cell,width-col),Math.min(10,height-row))
+        graphics.lineStyle(1,mat.grout,.55).lineBetween(x+col,y+row+10,x+Math.min(col+cell,width),y+row+10)
+      }else if(materialId==='carpet'){
+        graphics.fillStyle(alt?mat.base:mat.alt,.9).fillRect(x+col,y+row,Math.min(cell,width-col),Math.min(cell,height-row))
+      }else{
+        graphics.fillStyle(alt?mat.base:mat.alt,.72).fillRect(x+col,y+row,Math.min(cell,width-col),Math.min(cell,height-row))
+        graphics.lineStyle(1,mat.grout,.35).strokeRect(x+col,y+row,Math.min(cell,width-col),Math.min(cell,height-row))
+      }
+    }
+  }
+}
+
+function drawRoomLight(scene, room) {
+  const light=roomLight(room)
+  const radius=Math.min(room.width,room.height)*light.radius
+  const glow=scene.add.circle(room.x+room.width/2,room.y+room.height/2+18,radius,light.color,light.alpha)
+  glow.setDepth(1)
+}
+
+function drawHotelProp(scene, graphics, prop) {
+  const x=prop.x,y=prop.y
+  const dark=0x2b211a, wood=0x6f4f35, brass=0xd2a85e, linen=0xe9e0cf, steel=0x8d9799, cyan=0x58dfff
+  switch(prop.type){
+    case 'bed':
+      graphics.fillStyle(dark,1).fillRoundedRect(x-30,y-20,60,42,5)
+      graphics.fillStyle(linen,1).fillRoundedRect(x-25,y-16,50,32,4)
+      graphics.fillStyle(0xd7c4b3,1).fillRoundedRect(x-21,y-13,42,12,4)
+      graphics.fillStyle(brass,.9).fillRect(x-30,y+18,60,4); break
+    case 'nightstand':
+      graphics.fillStyle(wood,1).fillRoundedRect(x-10,y-10,20,20,3)
+      graphics.fillStyle(brass,1).fillCircle(x+5,y,2); break
+    case 'wardrobe':
+    case 'locker':
+      graphics.fillStyle(prop.type==='locker'?0x586168:wood,1).fillRoundedRect(x-17,y-23,34,46,3)
+      graphics.lineStyle(2,0x252a2c,.7).lineBetween(x,y-20,x,y+20); break
+    case 'receptionDesk':
+      graphics.fillStyle(wood,1).fillRoundedRect(x-42,y-17,84,34,6)
+      graphics.fillStyle(0xb98956,1).fillRoundedRect(x-38,y-13,76,10,4)
+      graphics.fillStyle(brass,.9).fillRect(x-20,y+3,40,3); break
+    case 'sofa':
+      graphics.fillStyle(0x415d70,1).fillRoundedRect(x-28,y-14,56,28,8)
+      graphics.fillStyle(0x56758a,.9).fillRoundedRect(x-24,y-9,48,14,6); break
+    case 'coffeeTable':
+    case 'meetingTable':
+    case 'diningTable':
+      graphics.fillStyle(wood,1).fillRoundedRect(x-28,y-11,56,22,5)
+      graphics.lineStyle(2,brass,.6).strokeRoundedRect(x-28,y-11,56,22,5); break
+    case 'barCounter':
+    case 'prepCounter':
+    case 'buffet':
+      graphics.fillStyle(prop.type==='prepCounter'?steel:wood,1).fillRoundedRect(x-34,y-12,68,24,4)
+      graphics.fillStyle(prop.type==='prepCounter'?0xd7dddd:0xa67848,1).fillRect(x-31,y-9,62,5); break
+    case 'stool':
+      graphics.fillStyle(0x7a3e34,1).fillCircle(x,y,8); graphics.fillStyle(steel,1).fillRect(x-2,y+7,4,12); break
+    case 'bottleRack':
+    case 'rack':
+    case 'linenRack':
+      graphics.fillStyle(dark,1).fillRoundedRect(x-24,y-20,48,40,3)
+      for(let r=0;r<3;r++){graphics.lineStyle(2,steel,.7).lineBetween(x-20,y-12+r*12,x+20,y-12+r*12)}
+      break
+    case 'washer':
+      graphics.fillStyle(0xdce3e4,1).fillRoundedRect(x-18,y-20,36,40,4)
+      graphics.fillStyle(0x1e3a4b,1).fillCircle(x,y+3,11)
+      graphics.lineStyle(3,cyan,.7).strokeCircle(x,y+3,11); break
+    case 'ironingTable':
+      graphics.fillStyle(0x9ca8a8,1).fillRoundedRect(x-30,y-7,60,14,7)
+      graphics.lineStyle(3,steel,1).lineBetween(x-20,y+6,x-10,y+22).lineBetween(x+20,y+6,x+10,y+22); break
+    case 'workbench':
+      graphics.fillStyle(wood,1).fillRoundedRect(x-32,y-10,64,20,4)
+      graphics.fillStyle(steel,1).fillRect(x-30,y+7,60,5)
+      graphics.fillStyle(0xd95b45,1).fillRect(x-20,y-3,12,5)
+      graphics.fillStyle(cyan,1).fillRect(x+5,y-4,16,6); break
+    case 'toolWall':
+      graphics.fillStyle(0x4f5557,1).fillRoundedRect(x-28,y-22,56,44,3)
+      for(let i=0;i<5;i++)graphics.fillStyle([0xd95b45,0xe0b85c,0x7ab7d8][i%3],1).fillRect(x-20+i*10,y-10+(i%2)*8,5,14); break
+    case 'screen':
+    case 'terminal':
+    case 'coreConsole':
+      graphics.fillStyle(0x0b1720,1).fillRoundedRect(x-20,y-15,40,30,4)
+      graphics.lineStyle(2,cyan,.9).strokeRoundedRect(x-20,y-15,40,30,4)
+      graphics.fillStyle(cyan,.35).fillRect(x-13,y-7,26,4); break
+    case 'stage':
+      graphics.fillStyle(0x5f372c,1).fillRoundedRect(x-38,y-10,76,20,3)
+      graphics.lineStyle(2,brass,.7).strokeRoundedRect(x-38,y-10,76,20,3); break
+    case 'conferenceRows':
+      for(let r=0;r<3;r++)for(let c=0;c<5;c++)graphics.fillStyle(0x7a3131,1).fillRoundedRect(x-36+c*18,y-18+r*14,12,10,2); break
+    case 'lounger':
+      graphics.fillStyle(0xe3d4bd,1).fillRoundedRect(x-28,y-9,56,18,8)
+      graphics.fillStyle(0xb9a98f,1).fillRoundedRect(x+12,y-16,16,16,6); break
+    case 'treadmill':
+      graphics.fillStyle(0x333b42,1).fillRoundedRect(x-25,y-9,50,18,4)
+      graphics.lineStyle(3,steel,1).lineBetween(x+18,y-8,x+24,y-24); break
+    case 'bench':
+      graphics.fillStyle(wood,1).fillRoundedRect(x-28,y-6,56,12,3)
+      graphics.fillStyle(steel,1).fillRect(x-20,y+6,4,12).fillRect(x+16,y+6,4,12); break
+    case 'fridge':
+      graphics.fillStyle(0xd8dede,1).fillRoundedRect(x-16,y-24,32,48,4)
+      graphics.lineStyle(1,0x8c9698,.8).lineBetween(x-14,y,x+14,y); break
+    case 'crate':
+    case 'luggage':
+      graphics.fillStyle(prop.type==='crate'?0x8b623e:0x5a3d67,1).fillRoundedRect(x-12,y-12,24,24,3)
+      graphics.lineStyle(2,brass,.45).strokeRect(x-9,y-9,18,18); break
+    case 'car':
+      graphics.fillStyle(0x17212b,1).fillRoundedRect(x-34,y-12,68,24,8)
+      graphics.fillStyle(0x54718a,.8).fillRoundedRect(x-14,y-15,28,12,4); break
+    case 'plant':
+    case 'planter':
+      graphics.fillStyle(0x7b5138,1).fillRoundedRect(x-8,y+4,16,14,3)
+      graphics.fillStyle(0x3d8c51,1).fillCircle(x,y-4,13)
+      graphics.fillStyle(0x62b86f,.9).fillCircle(x-7,y-8,7)
+      graphics.fillStyle(0x62b86f,.9).fillCircle(x+7,y-9,7); break
+    default:
+      graphics.fillStyle(0x6f7a80,1).fillRoundedRect(x-10,y-10,20,20,3)
+  }
+}
+
 function drawCheckerFloor(graphics, x, y, width, height, a, b) {
   const size = 16
   for (let row = 0; row < height; row += size) {
@@ -50,7 +176,9 @@ function drawCheckerFloor(graphics, x, y, width, height, a, b) {
   }
 }
 
-function drawRoom(scene, graphics, { x, y, width, height, title, subtitle, palette }) {
+function drawRoom(scene, graphics, { id, x, y, width, height, title, subtitle, palette }) {
+  const room={name:id,x,y,width,height}
+  const visual=visualForRoom(id)
   graphics.fillStyle(palette.glow, 0.1)
   graphics.fillRoundedRect(x - 6, y - 6, width + 12, height + 12, 14)
   graphics.fillStyle(0x0a1624, 1)
@@ -63,8 +191,11 @@ function drawRoom(scene, graphics, { x, y, width, height, title, subtitle, palet
   // Wall band
   graphics.fillStyle(palette.fill, 1)
   graphics.fillRect(x + 6, y + 6, width - 12, 44)
-  // Floor
-  drawCheckerFloor(graphics, x + 6, y + 52, width - 12, height - 58, palette.floor, Phaser.Display.Color.IntegerToColor(palette.floor).darken(18).color)
+  // Floor material is data-driven so art can be swapped without changing world logic.
+  drawMaterialFloor(graphics, room, visual.material)
+  // shallow south wall extrusion gives the room a baked/isometric read rather than a flat card
+  graphics.fillStyle(0x071018,.72).fillRect(x+7,y+height-13,width-14,11)
+  graphics.fillStyle(palette.line,.16).fillRect(x+7,y+height-13,width-14,3)
   // Accent rug
   graphics.fillStyle(palette.rug, 0.85)
   graphics.fillRoundedRect(x + width * 0.18, y + height * 0.55, width * 0.64, height * 0.28, 6)
@@ -108,6 +239,7 @@ function drawWayfinding(scene, graphics) {
 function drawMappedRoom(scene, graphics, object) {
   if (object.type === 'hub') return
   drawRoom(scene, graphics, {
+    id: object.name,
     x: object.x,
     y: object.y,
     width: object.width,
@@ -368,7 +500,11 @@ export class LivingWorldScene extends Phaser.Scene {
     for (let x = 48; x < WORLD_SIZE.width; x += 128) drawLamp(background, x, 38, x % 256 === 48 ? 0x41d8ff : 0xffc14f)
     for (let i = 0; i < 26; i += 1) this.add.circle(30 + ((i * 173) % 1210), 30 + ((i * 71) % 150), i % 3 === 0 ? 2 : 1, 0xb9efff, 0.8)
 
-    for (const room of objects('rooms')) drawMappedRoom(this, background, room)
+    for (const room of objects('rooms')) {
+      drawMappedRoom(this, background, room)
+      drawRoomLight(this, room)
+      for (const prop of propLayout(room)) drawHotelProp(this, background, prop)
+    }
     for (const decoration of objects('decorations')) drawDecoration(this, background, decoration)
     drawWayfinding(this, background)
 
