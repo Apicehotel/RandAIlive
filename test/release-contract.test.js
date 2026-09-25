@@ -63,11 +63,14 @@ test('phase 2 hall is driven by a Tiled-compatible object map', () => {
   assert.ok(decorations.some(item => item.type === 'terminal'))
 })
 
-test('phase 4 routes agents through mapped doors instead of crossing walls', () => {
+test('phase 4 routes agents through the rebuilt hotel corridors instead of teleporting between rooms', () => {
   const scene = read('src/phaser-world.js')
-  assert.match(scene, /function routeFor/)
-  assert.match(scene, /doorFor/)
-  assert.match(scene, /node\.route/)
-  assert.match(scene, /collision/)
-  assert.match(scene, /node\.container\.setPosition\(spawn\.x, spawn\.y\)/)
+  const layout = read('src/hotel-layout-v2.js')
+  assert.match(scene, /routeBetween/)
+  assert.match(scene, /n\.route/)
+  assert.match(scene, /centerOf\(areaById/)
+  assert.match(layout, /function routeBetween/)
+  assert.match(layout, /doorwayOf/)
+  assert.match(layout, /topHallY=238/)
+  assert.match(layout, /serviceHallY=595/)
 })
