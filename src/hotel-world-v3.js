@@ -6,13 +6,14 @@ export const WORLD={width:1536,height:960}
 const room=(id,label,x,y,w,h,kind,door='south',theme='hotel')=>({id,label,x,y,w,h,kind,door,theme})
 
 export const ROOMS=Object.freeze([
-  room('jazz1','JAZZ 1',64,70,176,160,'guest','south','jazz'),
-  room('jazz2','JAZZ 2',252,70,176,160,'guest','south','jazz'),
-  room('jazz3','JAZZ 3',440,70,176,160,'guest','south','jazz'),
-  room('jazz4','JAZZ 4',628,70,176,160,'guest','south','jazz'),
-  room('wine5','WINE 5',836,70,176,160,'guest','south','wine'),
-  room('wine6','WINE 6',1024,70,176,160,'guest','south','wine'),
-  room('wine7','WINE 7',1212,70,176,160,'guest','south','wine'),
+  room('jazz1','JAZZ 1',48,70,160,160,'guest','south','jazz'),
+  room('jazz2','JAZZ 2',224,70,160,160,'guest','south','jazz'),
+  room('jazz3','JAZZ 3',400,70,160,160,'guest','south','jazz'),
+  room('jazz4','JAZZ 4',576,70,160,160,'guest','south','jazz'),
+  room('wine5','WINE 5',752,70,160,160,'guest','south','wine'),
+  room('wine6','WINE 6',928,70,160,160,'guest','south','wine'),
+  room('wine7','WINE 7',1104,70,160,160,'guest','south','wine'),
+  room('wine8','WINE 8',1280,70,160,160,'guest','south','wine'),
 
   room('congress','CONGRESSI',64,356,250,230,'events','east','event'),
   room('meeting','MEETING',326,356,180,230,'events','south','event'),
