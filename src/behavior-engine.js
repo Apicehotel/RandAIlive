@@ -1,4 +1,5 @@
 import { AGENT_HOME_AREAS, AGENT_ROUTES, HOTEL_AREAS, getHotelArea } from './hotel-world.js'
+import { liveDirectiveFor } from './living-runtime.js'
 
 export const WORLD_ZONES = HOTEL_AREAS
 
@@ -37,23 +38,25 @@ const ACTIONS = Object.freeze({
   exterior:['Controlla l’ingresso','Fa una ronda esterna','Osserva il parcheggio'],
 })
 
-export function buildLifeState(agent, now=Date.now()){
+export function buildLifeState(agent, now=Date.now(), context={}){
+  const live=liveDirectiveFor(agent, context.issues || [])
+  if(live?.zone) return { mode:'LIVE', zone:live.zone, action:live.action, source:'LIVE', taskId:live.taskId || null, issueId:live.issueId || null }
   const status=agent.status
   const home=AGENT_HOME_AREAS[agent.id]||'hub'
   if(status==='OFFLINE') return { mode:'OFFLINE', zone:home, action:'Spento' }
   if(status==='ERROR') return { mode:'ALERT', zone:agent.id==='randsecure'?'lobby':'technical', action:agent.detail||'Diagnostica errore' }
   if(status==='WAITING_APPROVAL') return { mode:'WAIT', zone:'reception', action:'Attende approvazione' }
-  if(status==='RUNNING') return { mode:'WORK', zone:home, action:agent.activity||'Task reale in corso' }
+  if(status==='RUNNING') return { mode:'WORK', zone:home, action:live?.action||agent.activity||'Task reale in corso', source:live?.source||'LIVE', taskId:live?.taskId||agent.task_id||null }
 
   const slot=Math.floor(now/12000)
   const seq=AGENT_ROUTES[agent.id]||['hub']
   const seed=hash(`${agent.id}:${slot}`)
   const zone=pick(seq,seed)
-  return { mode:'WANDER', zone, action:pick(ACTIONS[zone]||['Passeggia nell’hotel'],seed>>4) }
+  return { mode:'WANDER', zone, action:pick(ACTIONS[zone]||['Passeggia nell’hotel'],seed>>4), source:'DEMO' }
 }
 
-export function zoneFor(agent, now=Date.now()){
-  const life=buildLifeState(agent,now)
+export function zoneFor(agent, now=Date.now(), context={}){
+  const life=buildLifeState(agent,now,context)
   const area=getHotelArea(life.zone)
   return { ...area, ...life, id: life.zone, label: area.label }
 }
