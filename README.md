@@ -22,7 +22,7 @@ Questo repository è l’unica fonte del codice RandAILive. Il repository `Apice
 - 10 AI dell’ecosistema Rand: RandAI, RandBrain, RandCore, RandMind, RandRadar, RandResearch, RandSecure, RandTest, RandOps e RandUI;
 - movimento e attività deterministiche, con ciclo di vita ogni 12 secondi;
 - runtime 2D Phaser separato dal layout React, con scena, camera, zoom e trascinamento;
-- hall descritta da una mappa Tiled-compatible con stanze, porte, collisioni e spawn;
+- hotel descritto da un world model dedicato con stanze, corridoi, porte, props e routing;
 - arredi e punti di interesse della hall descritti nello stesso layer dati, non sparsi nel codice della scena;
 - agenti renderizzati nella scena di gioco e selezionabili direttamente sulla mappa;
 - stati runtime `RUNNING`, `IDLE`, `WAITING_APPROVAL`, `ERROR` e `OFFLINE`;
@@ -66,7 +66,7 @@ Usare soltanto una chiave publishable/anon con policy RLS adeguate. Non inserire
 - Phaser 3
 - Supabase Realtime
 - CSS per shell/HUD e impalcatura grafica delle fasi iniziali
-- formato mappa Tiled-compatible in JSON
+- world model JavaScript data-driven con pipeline model → bake → props → renderer
 - `localStorage` per il salvataggio del ciclo di gioco
 
 ## Sviluppo locale
@@ -108,9 +108,12 @@ npm run ocean:up
 
 - `src/App.jsx`: composizione della hall, runtime live e interazioni;
 - `src/PhaserWorld.jsx`: ponte React/Phaser con caricamento dinamico del motore;
-- `src/phaser-world.js`: scena 2D, camere, stanze, agenti e movimento;
+- `src/phaser-world.js`: runtime Phaser, agenti, clienti e camera;
+- `src/hotel-world-v3.js`: world model e routing dell’Hotel Giò inventato;
+- `src/hotel-bake-v3.js`: bake procedurale di superfici, muri e luce;
+- `src/hotel-props-v3.js`: renderer depth-sorted degli arredi Rand;
+- `src/hotel-renderer-v3.js`: compositore a strati del mondo;
 - `src/phaser-world.css`: contenitore responsive della scena;
-- `src/hall-map.json`: mappa dati della hall con layer `rooms`, `collision`, `doors`, `spawns` e `decorations`;
 - `src/behavior-engine.js`: zone, percorsi sociali e attività delle AI;
 - `src/game-engine.js`: statistiche, azioni, missioni e salvataggio del gioco;
 - `src/GameHud.jsx`: HUD del personaggio selezionato;
@@ -201,3 +204,16 @@ La v2 sostituisce quel renderer con una planimetria continua:
 - vecchio `hotel-visual-system.js` eliminato dal codice attivo.
 
 La regola resta: artwork StarNet non viene copiato. Della repository upstream si sfruttano pattern tecnici e architetturali compatibili con MIT, mentre mondo, grafica e personaggi restano Rand.
+
+
+## Hotel World v3 · pipeline StarNet-inspired
+
+La v2 continua è stata utile come prova di layout, ma il renderer risultava ancora troppo piatto. La v3 sostituisce il percorso grafico attivo con quattro responsabilità separate, seguendo il principio architetturale osservato in StarNet senza incorporarne artwork o branding:
+
+`hotel-world-v3.js` → `hotel-bake-v3.js` → `hotel-props-v3.js` → `hotel-renderer-v3.js` → Phaser.
+
+La mappa è volutamente inventata per il gioco: otto aree Jazz/Wine leggibili in alto, corridoio camere, nucleo Hall/Reception, Congressi e Meeting a sinistra, Bar/Ristorante/Cucina a destra, Rand Hub centrale e fascia Service con Lavanderia, Stireria, Magazzino, Manutenzione, Staff, SPA e Palestra. I percorsi passano attraverso corridoi comuni invece di saltare tra riquadri.
+
+Il bake statico introduce materiali differenziati, pareti con altezza/cutaway, rampe di luce/ombra e light pool per ambiente. Gli arredi sono separati e ordinati per profondità; gli agenti sono entità runtime sopra il mondo statico e usano il routing del world model. La pipeline è predisposta per sostituire gradualmente gli arredi procedurali con sprite originali Rand senza cambiare logica, routing o stato live.
+
+La v3 elimina dal percorso attivo `hall-map.json` e `hotel-layout-v2.js`, così resta una sola fonte di verità grafica. StarNet resta una fonte tecnica MIT per pattern architetturali; nome, logo, artwork e sprite StarNet non vengono copiati.

@@ -44,33 +44,24 @@ test('phase 1 uses a separate Phaser world runtime', () => {
   assert.match(scene, /createLivingWorldGame/)
 })
 
-test('phase 2 hall is driven by a Tiled-compatible object map', () => {
-  const map = JSON.parse(read('src/hall-map.json'))
-  const layerNames = map.layers.map(layer => layer.name)
-  const rooms = map.layers.find(layer => layer.name === 'rooms').objects
-  const spawns = map.layers.find(layer => layer.name === 'spawns').objects
-
-  assert.equal(map.orientation, 'orthogonal')
-  assert.deepEqual(layerNames, ['rooms', 'collision', 'doors', 'spawns', 'decorations'])
-  assert.equal(rooms.filter(room => room.type === 'room').length, 23)
-  assert.equal(rooms.filter(room => room.type === 'hub').length, 1)
-  assert.equal(spawns.length, 10)
-  assert.ok(map.layers.find(layer => layer.name === 'collision').objects.length >= 10)
-  assert.ok(map.layers.find(layer => layer.name === 'doors').objects.length >= 24)
-  const decorations = map.layers.find(layer => layer.name === 'decorations').objects
-  assert.ok(decorations.length >= 8)
-  assert.ok(decorations.some(item => item.type === 'shelves'))
-  assert.ok(decorations.some(item => item.type === 'terminal'))
+test('phase 2 projects a dedicated Hotel Gio world model into the renderer', () => {
+  const scene = read('src/phaser-world.js')
+  const world = read('src/hotel-world-v3.js')
+  const bake = read('src/hotel-bake-v3.js')
+  const renderer = read('src/hotel-renderer-v3.js')
+  assert.match(scene, /projectWorld/)
+  assert.match(world, /function projectWorld/)
+  assert.match(bake, /function bakeHotel/)
+  assert.match(renderer, /createHotelRenderer/)
 })
 
-test('phase 4 routes agents through the rebuilt hotel corridors instead of teleporting between rooms', () => {
+test('phase 4 routes agents through the v3 hotel corridors instead of teleporting', () => {
   const scene = read('src/phaser-world.js')
-  const layout = read('src/hotel-layout-v2.js')
+  const world = read('src/hotel-world-v3.js')
   assert.match(scene, /routeBetween/)
-  assert.match(scene, /n\.route/)
-  assert.match(scene, /centerOf\(areaById/)
-  assert.match(layout, /function routeBetween/)
-  assert.match(layout, /doorwayOf/)
-  assert.match(layout, /topHallY=238/)
-  assert.match(layout, /serviceHallY=595/)
+  assert.match(scene, /node\.route/)
+  assert.match(world, /function routeBetween/)
+  assert.match(world, /doorwayOf/)
+  assert.match(world, /y:282/)
+  assert.match(world, /y:648/)
 })
