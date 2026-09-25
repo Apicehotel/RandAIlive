@@ -155,3 +155,17 @@ Aree canoniche: reception, lobby, bar/lounge, sala colazione, cucina, sala congr
 Il ciclo di gioco v1 aggiunge turno, evento giornaliero deterministico, reputazione hotel, servizio, sicurezza, pulizia, umore ospiti, crediti, aree visitate e catena di obiettivi. Le azioni AI sono Esplora, Allena, Aiuta, Ispeziona e Riposa; le quest manutenzione reali continuano a usare Supabase e, quando completate, alimentano anche la progressione locale del gioco.
 
 Il modello del mondo è in `src/hotel-world.js`. `src/behavior-engine.js` usa le aree Hotel Giò come destinazioni degli agenti, mentre `src/game-engine.js` conserva il loop di progressione senza modificare lo stato operativo delle AI.
+
+
+## Living runtime · innesto StarNet-inspired
+
+RandAILive distingue ora esplicitamente ciò che è **LIVE** da ciò che è **SIM**.
+
+- un agente `RUNNING` con `task_id` collegato a una segnalazione reale segue la zona dell'intervento invece di restare nella propria area di casa;
+- le camere 1xx-4xx vengono mappate sui piani Jazz e le 5xx-8xx sui piani Wine;
+- segnalazioni tecniche senza camera vengono instradate nell'Area Tecnica;
+- `WAITING_APPROVAL` ed `ERROR` restano stati live tracciabili;
+- il wandering deterministico degli agenti `IDLE` è marcato `SIM`, quindi l'interfaccia non presenta una simulazione come attività operativa;
+- `src/living-runtime.js` è il confine destinato ai futuri eventi RandCore/MCP: la scena Phaser riceve intenzioni già normalizzate e non deve inventare attività.
+
+Principio: **nessun movimento operativo senza una causa tracciabile**. Il prossimo livello può collegare event stream RandCore, ledger e agent tool calls mantenendo invariato il renderer Phaser.
