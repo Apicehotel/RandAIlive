@@ -1,656 +1,201 @@
 import Phaser from 'phaser'
-import hallMap from './hall-map.json'
+import { ALL_AREAS, HOTEL_LAYOUT, HOTEL_SHARED, WORLD, areaById, centerOf, doorwayOf, propPositions, routeBetween } from './hotel-layout-v2.js'
 import { AGENT_LOOKS, clientLane, problemEmoji, urgencyAura } from './pixel-sprites.js'
-import { MATERIALS, propLayout, roomLight, visualForRoom } from './hotel-visual-system.js'
 
-export const WORLD_SIZE = { width: hallMap.width * hallMap.tilewidth, height: hallMap.height * hallMap.tileheight }
+export const WORLD_SIZE={width:WORLD.width,height:WORLD.height}
 
-const layers = new Map(hallMap.layers.map(layer => [layer.name, layer]))
-const objects = name => layers.get(name)?.objects || []
-const property = (object, name, fallback = '') => object.properties?.find(item => item.name === name)?.value ?? fallback
-const roomFor = name => objects('rooms').find(room => room.name === name)
-const doorFor = name => objects('doors').find(door => door.name === `${name}-door`)
-const center = object => ({ x: object.x + object.width / 2, y: object.y + object.height / 2 })
-const hubCenter = () => center(roomFor('hub'))
-const doorCenter = door => ({ x: door.x + door.width / 2, y: door.y + door.height / 2 })
-
-function routeFor(start, fromZone, toZone) {
-  const targetRoom = roomFor(toZone)
-  const target = targetRoom ? center(targetRoom) : hubCenter()
-  if (!fromZone || fromZone === toZone) return [target]
-  const route = []
-  const sourceDoor = doorFor(fromZone)
-  const targetDoor = doorFor(toZone)
-  if (sourceDoor) route.push(doorCenter(sourceDoor))
-  route.push(hubCenter())
-  if (targetDoor) route.push(doorCenter(targetDoor))
-  route.push(target)
-  return route.filter((point, index, points) => index === 0 || point.x !== points[index - 1].x || point.y !== points[index - 1].y)
+const C={
+  bg:0x08131b,hotel:0xe7d6b7,hotel2:0xc7ab7d,wall:0x4b382c,wallDark:0x2a201a,
+  corridor:0xc9b38d,runner:0x8f2e2e,gold:0xd7b36a,cyan:0x55d8ff,
+  jazz:0x6e4d3b,wine:0x6a364d,service:0x56616a,food:0x6f4a2d,
 }
 
-const roomPalette = {
-  reception: { fill: 0x1a3f5c, floor: 0xc4a574, line: 0x41d8ff, glow: 0x2ac9ff, rug: 0xb83a3a },
-  knowledge: { fill: 0x163e3b, floor: 0x2a6b52, line: 0x64e8ad, glow: 0x45e7a0, rug: 0x1f5a40 },
-  radar: { fill: 0x3a1f3a, floor: 0x5a2f4a, line: 0xff6b85, glow: 0xff4e89, rug: 0x7a2040 },
-  ops: { fill: 0x1a3548, floor: 0x2a4a5c, line: 0x4fdbe8, glow: 0x38c9d8, rug: 0x1a5060 },
-  qa: { fill: 0x3a3a1a, floor: 0x5a5a2a, line: 0xe8d84b, glow: 0xd4c040, rug: 0x6a6a20 },
-  design: { fill: 0x3b2443, floor: 0x7a4a78, line: 0xf18bff, glow: 0xe36cff, rug: 0x9a3a88 },
-  coffee: { fill: 0x3e291d, floor: 0x8a6a48, line: 0xffba69, glow: 0xffa63d, rug: 0x6a4028 },
+const toneFor=a=>{
+  if(a.kind==='guest')return {floor:0x9b7655,accent:0xd9ad76}
+  if(a.kind==='wine')return {floor:0x7b4c61,accent:0xe07b9a}
+  if(a.kind==='food')return {floor:0x815c3d,accent:0xe4b767}
+  if(a.kind==='events')return {floor:0x74413b,accent:0xd66c5e}
+  if(a.kind==='service')return {floor:0x687074,accent:0x93b7c6}
+  if(a.kind==='wellness')return {floor:0x61745d,accent:0x9fd49a}
+  if(a.kind==='ai')return {floor:0x153746,accent:C.cyan}
+  return {floor:0xb3966f,accent:C.gold}
 }
 
-const toColor = tone => Phaser.Display.Color.HexStringToColor(tone || '#67d9ff').color
-
-function drawMaterialFloor(graphics, room, materialId) {
-  const mat=MATERIALS[materialId]||MATERIALS.terrazzo
-  const x=room.x+6,y=room.y+52,width=room.width-12,height=room.height-58
-  const cell=materialId==='parquet'?24:materialId==='tile'?18:materialId==='carpet'?12:20
-  graphics.fillStyle(mat.base,1).fillRect(x,y,width,height)
-  for(let row=0;row<height;row+=cell){
-    for(let col=0;col<width;col+=cell){
-      const alt=((col/cell)+(row/cell))%2===0
-      if(materialId==='parquet'){
-        graphics.fillStyle(alt?mat.base:mat.alt,1).fillRect(x+col,y+row,Math.min(cell,width-col),Math.min(10,height-row))
-        graphics.lineStyle(1,mat.grout,.55).lineBetween(x+col,y+row+10,x+Math.min(col+cell,width),y+row+10)
-      }else if(materialId==='carpet'){
-        graphics.fillStyle(alt?mat.base:mat.alt,.9).fillRect(x+col,y+row,Math.min(cell,width-col),Math.min(cell,height-row))
-      }else{
-        graphics.fillStyle(alt?mat.base:mat.alt,.72).fillRect(x+col,y+row,Math.min(cell,width-col),Math.min(cell,height-row))
-        graphics.lineStyle(1,mat.grout,.35).strokeRect(x+col,y+row,Math.min(cell,width-col),Math.min(cell,height-row))
-      }
-    }
+function floorPattern(g,a){
+  const t=toneFor(a),x=a.x+5,y=a.y+34,w=a.w-10,h=a.h-39
+  g.fillStyle(t.floor,1).fillRect(x,y,w,h)
+  const s=a.kind==='guest'||a.kind==='wine'?18:22
+  for(let yy=0;yy<h;yy+=s)for(let xx=0;xx<w;xx+=s){
+    const alt=((xx/s)+(yy/s))%2===0
+    g.fillStyle(alt?0xffffff:0x000000,.035).fillRect(x+xx,y+yy,Math.min(s,w-xx),Math.min(s,h-yy))
   }
 }
 
-function drawRoomLight(scene, room) {
-  const light=roomLight(room)
-  const radius=Math.min(room.width,room.height)*light.radius
-  const glow=scene.add.circle(room.x+room.width/2,room.y+room.height/2+18,radius,light.color,light.alpha)
-  glow.setDepth(1)
+function wallWithDoor(g,a){
+  const x=a.x,y=a.y,w=a.w,h=a.h
+  g.fillStyle(C.wallDark,.55).fillRect(x-5,y-5,w+10,h+10)
+  g.fillStyle(C.wall,1).fillRect(x,y,w,6)
+  g.fillRect(x,y,6,h)
+  g.fillRect(x+w-6,y,6,h)
+  const gap=34
+  if(a.door==='south'){
+    const mid=x+w/2
+    g.fillRect(x,y+h-6,mid-gap/2-x,6)
+    g.fillRect(mid+gap/2,y+h-6,x+w-(mid+gap/2),6)
+    g.fillStyle(C.gold,1).fillRect(mid-gap/2,y+h-3,gap,3)
+  } else if(a.door==='north'){
+    const mid=x+w/2
+    g.fillStyle(C.hotel,1).fillRect(mid-gap/2,y,gap,7)
+    g.fillStyle(C.gold,1).fillRect(mid-gap/2,y,gap,3)
+    g.fillRect(x,y+h-6,w,6)
+  } else if(a.door==='east'){
+    const mid=y+h/2
+    g.fillRect(x,y+h-6,w,6)
+    g.fillStyle(C.hotel,1).fillRect(x+w-7,mid-gap/2,8,gap)
+  } else if(a.door==='west'){
+    const mid=y+h/2
+    g.fillRect(x,y+h-6,w,6)
+    g.fillStyle(C.hotel,1).fillRect(x-1,mid-gap/2,8,gap)
+  } else g.fillRect(x,y+h-6,w,6)
 }
 
-function drawHotelProp(scene, graphics, prop) {
-  const x=prop.x,y=prop.y
-  const dark=0x2b211a, wood=0x6f4f35, brass=0xd2a85e, linen=0xe9e0cf, steel=0x8d9799, cyan=0x58dfff
-  switch(prop.type){
-    case 'bed':
-      graphics.fillStyle(dark,1).fillRoundedRect(x-30,y-20,60,42,5)
-      graphics.fillStyle(linen,1).fillRoundedRect(x-25,y-16,50,32,4)
-      graphics.fillStyle(0xd7c4b3,1).fillRoundedRect(x-21,y-13,42,12,4)
-      graphics.fillStyle(brass,.9).fillRect(x-30,y+18,60,4); break
-    case 'nightstand':
-      graphics.fillStyle(wood,1).fillRoundedRect(x-10,y-10,20,20,3)
-      graphics.fillStyle(brass,1).fillCircle(x+5,y,2); break
-    case 'wardrobe':
-    case 'locker':
-      graphics.fillStyle(prop.type==='locker'?0x586168:wood,1).fillRoundedRect(x-17,y-23,34,46,3)
-      graphics.lineStyle(2,0x252a2c,.7).lineBetween(x,y-20,x,y+20); break
-    case 'receptionDesk':
-      graphics.fillStyle(wood,1).fillRoundedRect(x-42,y-17,84,34,6)
-      graphics.fillStyle(0xb98956,1).fillRoundedRect(x-38,y-13,76,10,4)
-      graphics.fillStyle(brass,.9).fillRect(x-20,y+3,40,3); break
-    case 'sofa':
-      graphics.fillStyle(0x415d70,1).fillRoundedRect(x-28,y-14,56,28,8)
-      graphics.fillStyle(0x56758a,.9).fillRoundedRect(x-24,y-9,48,14,6); break
-    case 'coffeeTable':
-    case 'meetingTable':
-    case 'diningTable':
-      graphics.fillStyle(wood,1).fillRoundedRect(x-28,y-11,56,22,5)
-      graphics.lineStyle(2,brass,.6).strokeRoundedRect(x-28,y-11,56,22,5); break
-    case 'barCounter':
-    case 'prepCounter':
-    case 'buffet':
-      graphics.fillStyle(prop.type==='prepCounter'?steel:wood,1).fillRoundedRect(x-34,y-12,68,24,4)
-      graphics.fillStyle(prop.type==='prepCounter'?0xd7dddd:0xa67848,1).fillRect(x-31,y-9,62,5); break
-    case 'stool':
-      graphics.fillStyle(0x7a3e34,1).fillCircle(x,y,8); graphics.fillStyle(steel,1).fillRect(x-2,y+7,4,12); break
-    case 'bottleRack':
-    case 'rack':
-    case 'linenRack':
-      graphics.fillStyle(dark,1).fillRoundedRect(x-24,y-20,48,40,3)
-      for(let r=0;r<3;r++){graphics.lineStyle(2,steel,.7).lineBetween(x-20,y-12+r*12,x+20,y-12+r*12)}
-      break
-    case 'washer':
-      graphics.fillStyle(0xdce3e4,1).fillRoundedRect(x-18,y-20,36,40,4)
-      graphics.fillStyle(0x1e3a4b,1).fillCircle(x,y+3,11)
-      graphics.lineStyle(3,cyan,.7).strokeCircle(x,y+3,11); break
-    case 'ironingTable':
-      graphics.fillStyle(0x9ca8a8,1).fillRoundedRect(x-30,y-7,60,14,7)
-      graphics.lineStyle(3,steel,1).lineBetween(x-20,y+6,x-10,y+22).lineBetween(x+20,y+6,x+10,y+22); break
-    case 'workbench':
-      graphics.fillStyle(wood,1).fillRoundedRect(x-32,y-10,64,20,4)
-      graphics.fillStyle(steel,1).fillRect(x-30,y+7,60,5)
-      graphics.fillStyle(0xd95b45,1).fillRect(x-20,y-3,12,5)
-      graphics.fillStyle(cyan,1).fillRect(x+5,y-4,16,6); break
-    case 'toolWall':
-      graphics.fillStyle(0x4f5557,1).fillRoundedRect(x-28,y-22,56,44,3)
-      for(let i=0;i<5;i++)graphics.fillStyle([0xd95b45,0xe0b85c,0x7ab7d8][i%3],1).fillRect(x-20+i*10,y-10+(i%2)*8,5,14); break
-    case 'screen':
-    case 'terminal':
-    case 'coreConsole':
-      graphics.fillStyle(0x0b1720,1).fillRoundedRect(x-20,y-15,40,30,4)
-      graphics.lineStyle(2,cyan,.9).strokeRoundedRect(x-20,y-15,40,30,4)
-      graphics.fillStyle(cyan,.35).fillRect(x-13,y-7,26,4); break
-    case 'stage':
-      graphics.fillStyle(0x5f372c,1).fillRoundedRect(x-38,y-10,76,20,3)
-      graphics.lineStyle(2,brass,.7).strokeRoundedRect(x-38,y-10,76,20,3); break
-    case 'conferenceRows':
-      for(let r=0;r<3;r++)for(let c=0;c<5;c++)graphics.fillStyle(0x7a3131,1).fillRoundedRect(x-36+c*18,y-18+r*14,12,10,2); break
-    case 'lounger':
-      graphics.fillStyle(0xe3d4bd,1).fillRoundedRect(x-28,y-9,56,18,8)
-      graphics.fillStyle(0xb9a98f,1).fillRoundedRect(x+12,y-16,16,16,6); break
-    case 'treadmill':
-      graphics.fillStyle(0x333b42,1).fillRoundedRect(x-25,y-9,50,18,4)
-      graphics.lineStyle(3,steel,1).lineBetween(x+18,y-8,x+24,y-24); break
-    case 'bench':
-      graphics.fillStyle(wood,1).fillRoundedRect(x-28,y-6,56,12,3)
-      graphics.fillStyle(steel,1).fillRect(x-20,y+6,4,12).fillRect(x+16,y+6,4,12); break
-    case 'fridge':
-      graphics.fillStyle(0xd8dede,1).fillRoundedRect(x-16,y-24,32,48,4)
-      graphics.lineStyle(1,0x8c9698,.8).lineBetween(x-14,y,x+14,y); break
-    case 'crate':
-    case 'luggage':
-      graphics.fillStyle(prop.type==='crate'?0x8b623e:0x5a3d67,1).fillRoundedRect(x-12,y-12,24,24,3)
-      graphics.lineStyle(2,brass,.45).strokeRect(x-9,y-9,18,18); break
-    case 'car':
-      graphics.fillStyle(0x17212b,1).fillRoundedRect(x-34,y-12,68,24,8)
-      graphics.fillStyle(0x54718a,.8).fillRoundedRect(x-14,y-15,28,12,4); break
-    case 'plant':
-    case 'planter':
-      graphics.fillStyle(0x7b5138,1).fillRoundedRect(x-8,y+4,16,14,3)
-      graphics.fillStyle(0x3d8c51,1).fillCircle(x,y-4,13)
-      graphics.fillStyle(0x62b86f,.9).fillCircle(x-7,y-8,7)
-      graphics.fillStyle(0x62b86f,.9).fillCircle(x+7,y-9,7); break
-    default:
-      graphics.fillStyle(0x6f7a80,1).fillRoundedRect(x-10,y-10,20,20,3)
+function drawRoom(scene,g,a){
+  floorPattern(g,a); wallWithDoor(g,a)
+  const t=toneFor(a)
+  g.fillStyle(0x1b1714,.9).fillRoundedRect(a.x+12,a.y+10,Math.min(a.w-24,126),20,3)
+  g.lineStyle(1,t.accent,.9).strokeRoundedRect(a.x+12,a.y+10,Math.min(a.w-24,126),20,3)
+  scene.add.text(a.x+18,a.y+14,a.label,{fontFamily:'monospace',fontSize:'9px',fontStyle:'bold',color:'#fff1d2'}).setDepth(2)
+}
+
+function drawShared(scene,g,a){
+  const t=toneFor(a)
+  g.fillStyle(t.floor,1).fillRoundedRect(a.x,a.y,a.w,a.h,8)
+  g.lineStyle(2,t.accent,.55).strokeRoundedRect(a.x,a.y,a.w,a.h,8)
+  scene.add.text(a.x+a.w/2,a.y+12,a.label,{fontFamily:'monospace',fontSize:'10px',fontStyle:'bold',color:'#f8e7c3'}).setOrigin(.5,0).setDepth(2)
+}
+
+function drawProp(g,p){
+  const x=p.x,y=p.y,wood=0x6d4c33,light=0xe9ddc8,metal=0x909a9d,dark=0x2b221c
+  switch(p.type){
+    case'bed':g.fillStyle(dark,1).fillRoundedRect(x-24,y-14,48,30,4);g.fillStyle(light,1).fillRoundedRect(x-20,y-11,40,23,4);g.fillStyle(0xc6ae96,1).fillRoundedRect(x-17,y-8,34,8,3);break
+    case'nightstand':g.fillStyle(wood,1).fillRoundedRect(x-8,y-8,16,16,2);g.fillStyle(C.gold,1).fillCircle(x+4,y,1.5);break
+    case'wardrobe':case'locker':g.fillStyle(p.type==='locker'?0x657078:wood,1).fillRoundedRect(x-11,y-18,22,36,3);g.lineStyle(1,dark,.8).lineBetween(x,y-15,x,y+15);break
+    case'wineRack':g.fillStyle(wood,1).fillRoundedRect(x-13,y-16,26,32,2);for(let i=0;i<6;i++)g.fillStyle(0x7a2e42,1).fillCircle(x-7+(i%2)*14,y-10+Math.floor(i/2)*10,3);break
+    case'desk':case'counter':case'buffet':case'workbench':case'meetingTable':
+      g.fillStyle(wood,1).fillRoundedRect(x-26,y-8,52,16,3);g.fillStyle(0xa77a50,1).fillRect(x-23,y-6,46,4);break
+    case'sofa':g.fillStyle(0x4e6877,1).fillRoundedRect(x-23,y-10,46,20,6);g.fillStyle(0x688595,1).fillRoundedRect(x-19,y-6,38,9,4);break
+    case'table':g.fillStyle(wood,1).fillCircle(x,y,15);g.fillStyle(C.gold,.5).fillCircle(x,y,12);break
+    case'stool':g.fillStyle(0x7d3d36,1).fillCircle(x,y,7);g.fillStyle(metal,1).fillRect(x-1,y+6,2,10);break
+    case'plant':case'planter':g.fillStyle(0x80583c,1).fillRoundedRect(x-6,y+2,12,10,2);g.fillStyle(0x4b9a5c,1).fillCircle(x,y-4,10);g.fillStyle(0x74bf7c,.8).fillCircle(x-5,y-7,5);break
+    case'luggage':case'crate':g.fillStyle(p.type==='crate'?0x8e6842:0x573d68,1).fillRoundedRect(x-9,y-9,18,18,3);break
+    case'washer':g.fillStyle(0xd8dede,1).fillRoundedRect(x-13,y-15,26,30,3);g.fillStyle(0x173848,1).fillCircle(x,y+2,8);g.lineStyle(2,C.cyan,.7).strokeCircle(x,y+2,8);break
+    case'linenRack':case'rack':g.fillStyle(dark,1).fillRoundedRect(x-17,y-16,34,32,2);for(let r=0;r<3;r++)g.lineStyle(2,metal,.7).lineBetween(x-14,y-9+r*10,x+14,y-9+r*10);break
+    case'ironingTable':g.fillStyle(0xa3acae,1).fillRoundedRect(x-22,y-5,44,10,5);g.lineStyle(2,metal,1).lineBetween(x-15,y+5,x-8,y+16).lineBetween(x+15,y+5,x+8,y+16);break
+    case'toolWall':g.fillStyle(0x4d5559,1).fillRoundedRect(x-18,y-16,36,32,2);for(let i=0;i<4;i++)g.fillStyle([0xdc5e49,0xe1b95c,0x6bb5da][i%3],1).fillRect(x-12+i*8,y-9+(i%2)*7,4,12);break
+    case'fridge':g.fillStyle(0xdce2e2,1).fillRoundedRect(x-11,y-18,22,36,3);g.lineStyle(1,0x8c9698,.8).lineBetween(x-9,y,x+9,y);break
+    case'stage':g.fillStyle(0x663a31,1).fillRoundedRect(x-28,y-7,56,14,3);g.lineStyle(2,C.gold,.6).strokeRoundedRect(x-28,y-7,56,14,3);break
+    case'chairs':for(let r=0;r<2;r++)for(let c=0;c<5;c++)g.fillStyle(0x773538,1).fillRoundedRect(x-28+c*14,y-8+r*12,9,8,2);break
+    case'screen':case'terminal':case'core':g.fillStyle(0x0b1720,1).fillRoundedRect(x-14,y-11,28,22,3);g.lineStyle(2,C.cyan,.9).strokeRoundedRect(x-14,y-11,28,22,3);g.fillStyle(C.cyan,.35).fillRect(x-8,y-4,16,3);break
+    case'lounger':g.fillStyle(0xe1d1bb,1).fillRoundedRect(x-21,y-7,42,14,7);break
+    case'bench':g.fillStyle(wood,1).fillRoundedRect(x-20,y-5,40,10,3);break
+    case'treadmill':g.fillStyle(0x343c42,1).fillRoundedRect(x-20,y-6,40,12,3);g.lineStyle(2,metal,1).lineBetween(x+14,y-5,x+18,y-18);break
   }
 }
 
-function drawCheckerFloor(graphics, x, y, width, height, a, b) {
-  const size = 16
-  for (let row = 0; row < height; row += size) {
-    for (let col = 0; col < width; col += size) {
-      const light = ((col / size) + (row / size)) % 2 === 0
-      graphics.fillStyle(light ? a : b, 1)
-      graphics.fillRect(x + col, y + row, Math.min(size, width - col), Math.min(size, height - row))
-    }
-  }
+function makeAgent(scene,a,onSelect){
+  const look=AGENT_LOOKS[a.id]||AGENT_LOOKS.randai
+  const accent=Phaser.Display.Color.HexStringToColor(a.tone||'#55d8ff').color
+  const c=scene.add.container(0,0).setSize(34,46).setInteractive({useHandCursor:true}).setDepth(12)
+  const shadow=scene.add.ellipse(0,14,24,7,0x000000,.35)
+  const ring=scene.add.circle(0,2,14,accent,.08).setStrokeStyle(1,accent,.75)
+  const body=scene.add.rectangle(0,5,14,18,0xe9eef0).setStrokeStyle(2,0x15202a)
+  const head=scene.add.rectangle(0,-8,14,12,0xf1e5d8).setStrokeStyle(2,0x15202a)
+  const visor=scene.add.rectangle(0,-8,9,4,accent,.9)
+  const badge=scene.add.circle(0,5,3,look.accent||accent,1)
+  const label=scene.add.text(0,24,a.name,{fontFamily:'monospace',fontSize:'8px',fontStyle:'bold',color:'#ffffff',backgroundColor:'#07111fd9',padding:{left:3,right:3,top:1,bottom:1}}).setOrigin(.5)
+  c.add([shadow,ring,body,head,visor,badge,label])
+  c.on('pointerdown',()=>onSelect?.(a.id))
+  return {container:c,ring,target:{x:0,y:0},route:[],zone:null,tween:null}
 }
 
-function drawRoom(scene, graphics, { id, x, y, width, height, title, subtitle, palette }) {
-  const room={name:id,x,y,width,height}
-  const visual=visualForRoom(id)
-  graphics.fillStyle(palette.glow, 0.1)
-  graphics.fillRoundedRect(x - 6, y - 6, width + 12, height + 12, 14)
-  graphics.fillStyle(0x0a1624, 1)
-  graphics.fillRoundedRect(x, y, width, height, 10)
-  graphics.lineStyle(4, palette.line, 0.95)
-  graphics.strokeRoundedRect(x, y, width, height, 10)
-  graphics.lineStyle(2, 0xffffff, 0.12)
-  graphics.strokeRoundedRect(x + 4, y + 4, width - 8, height - 8, 8)
-
-  // Wall band
-  graphics.fillStyle(palette.fill, 1)
-  graphics.fillRect(x + 6, y + 6, width - 12, 44)
-  // Floor material is data-driven so art can be swapped without changing world logic.
-  drawMaterialFloor(graphics, room, visual.material)
-  // shallow south wall extrusion gives the room a baked/isometric read rather than a flat card
-  graphics.fillStyle(0x071018,.72).fillRect(x+7,y+height-13,width-14,11)
-  graphics.fillStyle(palette.line,.16).fillRect(x+7,y+height-13,width-14,3)
-  // Accent rug
-  graphics.fillStyle(palette.rug, 0.85)
-  graphics.fillRoundedRect(x + width * 0.18, y + height * 0.55, width * 0.64, height * 0.28, 6)
-  graphics.lineStyle(2, 0xffd46c, 0.55)
-  graphics.strokeRoundedRect(x + width * 0.18, y + height * 0.55, width * 0.64, height * 0.28, 6)
-
-  // Sign plate
-  graphics.fillStyle(0x08111c, 0.92)
-  graphics.fillRoundedRect(x + 12, y + 12, Math.min(width - 24, 18 + title.length * 9), 28, 4)
-  graphics.lineStyle(2, palette.line, 0.9)
-  graphics.strokeRoundedRect(x + 12, y + 12, Math.min(width - 24, 18 + title.length * 9), 28, 4)
-  scene.add.text(x + 20, y + 16, title, { color: '#f4fbff', fontFamily: 'monospace', fontSize: '12px', fontStyle: 'bold' })
-  scene.add.text(x + 20, y + 34, subtitle, { color: '#9ed6ea', fontFamily: 'monospace', fontSize: '8px', letterSpacing: 1 })
+function makeClient(scene,issue,index,onSelect){
+  const aura=urgencyAura(issue.urgenza),pos=clientLane(issue,index)
+  const area=areaById('lobby'),x=area.x+65+(index%6)*65,y=area.y+42+(index%2)*16
+  const c=scene.add.container(x,y).setSize(28,38).setInteractive({useHandCursor:true}).setDepth(11)
+  const glow=scene.add.circle(0,4,16,aura.color,aura.alpha)
+  const body=scene.add.rectangle(0,5,11,16,0x6b86a3).setStrokeStyle(2,0x16202a)
+  const head=scene.add.rectangle(0,-6,10,10,0xe4bea0).setStrokeStyle(2,0x16202a)
+  const bubble=scene.add.text(0,-22,problemEmoji(issue),{fontSize:'12px',backgroundColor:'#ffffff',padding:{left:2,right:2,top:1,bottom:1}}).setOrigin(.5)
+  c.add([glow,body,head,bubble]);c.on('pointerdown',()=>onSelect?.(issue))
+  return {container:c,glow,aura,pulse:aura.pulse}
 }
 
-function drawGrid(graphics) {
-  graphics.lineStyle(1, 0x75dfff, 0.05)
-  for (let x = 0; x <= WORLD_SIZE.width; x += 32) graphics.lineBetween(x, 270, x, WORLD_SIZE.height)
-  for (let y = 270; y <= WORLD_SIZE.height; y += 32) graphics.lineBetween(0, y, WORLD_SIZE.width, y)
-}
-
-function drawLamp(graphics, x, y, color = 0xffc14f) {
-  graphics.fillStyle(0x07111f, 0.9).fillRoundedRect(x - 8, y, 16, 24, 4)
-  graphics.fillStyle(color, 0.18).fillCircle(x, y + 10, 23)
-  graphics.fillStyle(color, 0.95).fillCircle(x, y + 10, 5)
-  graphics.lineStyle(1, color, 0.75).strokeCircle(x, y + 10, 9)
-}
-
-function drawWayfinding(scene, graphics) {
-  const signs = [
-    { x: 380, label: '← LOUNGE · MIND' },
-    { x: 760, label: 'OPS · QA →' },
-  ]
-  for (const sign of signs) {
-    graphics.fillStyle(0x081827, 0.94).fillRoundedRect(sign.x, 108, 170, 30, 8)
-    graphics.lineStyle(2, 0xffd46c, 0.85).strokeRoundedRect(sign.x, 108, 170, 30, 8)
-    scene.add.text(sign.x + 85, 123, sign.label, { color: '#ffe9a8', fontFamily: 'monospace', fontSize: '10px', fontStyle: 'bold' }).setOrigin(0.5)
+export class LivingWorldScene extends Phaser.Scene{
+  constructor(){super({key:'LivingWorld'});this.agentNodes=new Map();this.clientNodes=new Map();this.spawnPoints=new Map();this.selectedId=null;this.director=true}
+  create(){
+    const cb=this.game.config.callbacks||{};this.onSelect=cb.onSelect;this.onSelectIssue=cb.onSelectIssue
+    this.paintWorld();this.setAgents(cb.agents||[]);this.setClients(cb.issues||[]);this.bindCamera();cb.onSceneReady?.(this)
   }
-}
+  paintWorld(){
+    const g=this.add.graphics().setDepth(0)
+    this.cameras.main.setBackgroundColor('#061018');this.cameras.main.setBounds(0,0,WORLD.width,WORLD.height);this.cameras.main.centerOn(WORLD.width/2,WORLD.height/2)
+    g.fillStyle(C.bg,1).fillRect(0,0,WORLD.width,WORLD.height)
+    g.fillStyle(0x10242c,1).fillRoundedRect(20,25,WORLD.width-40,WORLD.height-55,18)
+    g.fillStyle(C.hotel,1).fillRoundedRect(28,33,WORLD.width-56,WORLD.height-71,14)
 
-function drawMappedRoom(scene, graphics, object) {
-  if (object.type === 'hub') return
-  drawRoom(scene, graphics, {
-    id: object.name,
-    x: object.x,
-    y: object.y,
-    width: object.width,
-    height: object.height,
-    title: property(object, 'title', object.name.toUpperCase()),
-    subtitle: property(object, 'subtitle'),
-    palette: roomPalette[property(object, 'palette', 'reception')] || roomPalette.reception,
-  })
-}
+    // connected corridors: hotel first, rooms second, furnishings third.
+    g.fillStyle(C.corridor,1).fillRect(45,205,1350,82)
+    g.fillStyle(C.corridor,1).fillRect(45,535,1350,72)
+    g.fillStyle(C.corridor,1).fillRect(565,285,310,250)
+    g.fillStyle(C.runner,.82).fillRoundedRect(650,255,140,340,10)
+    g.lineStyle(2,C.gold,.55).strokeRoundedRect(650,255,140,340,10)
 
-const decorationStyle = {
-  reception: { fill: 0x0d283d, line: 0x62ddff },
-  knowledge: { fill: 0x15352e, line: 0x75e8b0 },
-  radar: { fill: 0x2c1d45, line: 0xff7892 },
-  ops: { fill: 0x1a3548, line: 0x4fdbe8 },
-}
+    for(const a of HOTEL_LAYOUT)drawRoom(this,g,a)
+    for(const a of Object.values(HOTEL_SHARED))drawShared(this,g,a)
+    for(const a of ALL_AREAS)for(const p of propPositions(a))drawProp(g,p)
 
-function drawDecoration(scene, graphics, object) {
-  const { x, y, width, height } = object
-  const style = decorationStyle[property(object, 'style', 'ops')] || decorationStyle.ops
-  graphics.lineStyle(2, style.line, 0.85)
-
-  if (object.type === 'plant') {
-    graphics.fillStyle(0x8b5538, 1).fillRoundedRect(x + 7, y + height - 15, width - 14, 15, 4)
-    graphics.fillStyle(0x2d8a4e, 1).fillEllipse(x + width / 2, y + 15, width, height - 12)
-    graphics.fillStyle(0x5ed98a, 0.9).fillEllipse(x + 7, y + 10, width / 2, height - 20)
-    graphics.fillStyle(0x8be69e, 0.7).fillEllipse(x + width - 8, y + 14, width / 2.5, height - 24)
-    return
+    // hotel identity
+    this.add.text(720,16,'HOTEL GIÒ · RANDAILIVE',{fontFamily:'monospace',fontSize:'15px',fontStyle:'bold',color:'#f2d795'}).setOrigin(.5,0).setDepth(3)
+    this.add.text(720,844,'INGRESSO · LIVE HOTEL OPERATIONS',{fontFamily:'monospace',fontSize:'9px',color:'#5ddcff'}).setOrigin(.5,0).setDepth(3)
   }
-
-  if (object.type === 'shelves') {
-    graphics.fillStyle(0x1a1008, 0.98).fillRoundedRect(x, y, width, height, 6)
-    graphics.lineStyle(2, 0xc4a574, 0.7).strokeRoundedRect(x, y, width, height, 6)
-    for (let shelf = 0; shelf < 3; shelf += 1) {
-      const shelfY = y + 12 + shelf * 26
-      graphics.lineStyle(2, 0xc4a574, 0.8).lineBetween(x + 8, shelfY + 19, x + width - 8, shelfY + 19)
-      for (let book = 0; book < 9; book += 1) {
-        graphics.fillStyle([0x64e8ad, 0x41d8ff, 0xf18bff, 0xffc14f, 0xff6b85][(book + shelf) % 5], 0.92)
-          .fillRect(x + 14 + book * 26, shelfY, 12, 17)
-      }
-    }
-    return
+  bindCamera(){
+    const cam=this.cameras.main;cam.setZoom(.78)
+    let drag=false,prev=null
+    this.input.on('pointerdown',p=>{if(p.button===0){drag=true;prev={x:p.x,y:p.y}}})
+    this.input.on('pointermove',p=>{if(!drag||!prev||!p.isDown)return;cam.scrollX-=(p.x-prev.x)/cam.zoom;cam.scrollY-=(p.y-prev.y)/cam.zoom;prev={x:p.x,y:p.y}})
+    this.input.on('pointerup',()=>{drag=false;prev=null})
+    this.input.on('wheel',(_p,_o,_dx,dy)=>cam.setZoom(Phaser.Math.Clamp(cam.zoom-dy*.001,.48,1.45)))
   }
-
-  if (object.type === 'screen') {
-    graphics.fillStyle(0x08111c, 1).fillRoundedRect(x, y, width, height, 8)
-    graphics.strokeRoundedRect(x, y, width, height, 8)
-    graphics.fillStyle(0x0a2a20, 1).fillRoundedRect(x + 10, y + 10, width - 20, height - 24, 4)
-    graphics.fillStyle(0x41d8ff, 0.35).fillCircle(x + width / 2, y + height / 2 - 4, 18)
-    graphics.lineStyle(2, 0xff6b85, 0.8).strokeCircle(x + width / 2, y + height / 2 - 4, 22)
-    graphics.lineStyle(1, 0xff6b85, 0.6).lineBetween(x + width / 2, y + height / 2 - 4, x + width / 2 + 16, y + height / 2 - 16)
-    return
-  }
-
-  if (object.type === 'terminal') {
-    graphics.fillStyle(0x0c1a28, 1).fillRoundedRect(x, y + height - 18, width, 18, 4)
-    for (let monitor = 0; monitor < 3; monitor += 1) {
-      const monitorX = x + 14 + monitor * ((width - 28) / 3)
-      graphics.fillStyle(0x08111c, 1).fillRoundedRect(monitorX, y, 54, height - 20, 4)
-      graphics.lineStyle(2, style.line, 0.85).strokeRoundedRect(monitorX, y, 54, height - 20, 4)
-      graphics.fillStyle(style.line, 0.7).fillRect(monitorX + 8, y + 12, 38, 3)
-      graphics.fillStyle(0x64e8ad, 0.5).fillRect(monitorX + 8, y + 22, 28, 3)
-      graphics.fillStyle(0xffc14f, 0.4).fillRect(monitorX + 8, y + 32, 22, 3)
-    }
-    return
-  }
-
-  // desk / table
-  graphics.fillStyle(0x3a2818, 1).fillRoundedRect(x, y, width, height, 8)
-  graphics.lineStyle(3, 0xc4a574, 0.9).strokeRoundedRect(x, y, width, height, 8)
-  graphics.fillStyle(0x5a4030, 1).fillRoundedRect(x + 8, y + 8, width - 16, height - 22, 4)
-  graphics.fillStyle(style.line, 0.55).fillRoundedRect(x + 14, y + 12, width - 28, 8, 3)
-  for (let seat = 0; seat < Math.max(2, Math.floor(width / 70)); seat += 1) {
-    graphics.fillStyle(0x2a4a6a, 1).fillRoundedRect(x + 18 + seat * 66, y + height - 6, 28, 10, 3)
-    graphics.fillStyle(0x4a7aaa, 0.9).fillCircle(x + 32 + seat * 66, y + height - 2, 5)
-  }
-}
-
-function addHat(parts, scene, look, accent) {
-  if (look.hat === 'brain') {
-    parts.push(scene.add.ellipse(0, -30, 28, 18, 0xff8ad8, 1).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.ellipse(-6, -32, 8, 6, 0xffb8e8, 0.9))
-    parts.push(scene.add.ellipse(6, -28, 7, 5, 0xffb8e8, 0.9))
-  } else if (look.hat === 'hood') {
-    parts.push(scene.add.triangle(0, -22, 0, -40, -22, -8, 22, -8, accent, 1).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(0, -12, 30, 14, 0x1a3a28).setStrokeStyle(2, 0x07111f))
-  } else if (look.hat === 'dish') {
-    parts.push(scene.add.ellipse(0, -32, 26, 12, accent, 1).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(0, -24, 4, 10, 0xdde8ef).setStrokeStyle(1, 0x07111f))
-    parts.push(scene.add.circle(8, -34, 4, 0xffe08a, 1))
-  } else if (look.hat === 'helmet') {
-    parts.push(scene.add.rectangle(0, -24, 34, 16, 0x4a2028).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(0, -18, 28, 6, accent, 0.9))
-  } else if (look.hat === 'ears') {
-    parts.push(scene.add.triangle(-14, -26, -14, -40, -22, -20, -6, -20, accent, 1).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.triangle(14, -26, 14, -40, 6, -20, 22, -20, accent, 1).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(0, -18, 36, 8, 0x2a1a30).setStrokeStyle(2, accent))
-  } else if (look.hat === 'goggles') {
-    parts.push(scene.add.circle(-8, -8, 7, 0x7fc8ff, 0.85).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.circle(8, -8, 7, 0x7fc8ff, 0.85).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(0, -8, 8, 3, 0x07111f))
-  } else if (look.hat === 'headset') {
-    parts.push(scene.add.rectangle(-18, -6, 6, 14, accent).setStrokeStyle(1, 0x07111f))
-    parts.push(scene.add.rectangle(18, -6, 6, 14, accent).setStrokeStyle(1, 0x07111f))
-    parts.push(scene.add.rectangle(0, -20, 30, 4, accent).setStrokeStyle(1, 0x07111f))
-  } else if (look.hat === 'cap') {
-    parts.push(scene.add.rectangle(0, -24, 30, 10, accent).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(8, -20, 18, 5, 0x07111f, 0.85))
-  }
-}
-
-function addProp(parts, scene, look, accent) {
-  if (look.prop === 'laptop') {
-    parts.push(scene.add.rectangle(18, 10, 16, 12, 0x1a2a38).setStrokeStyle(2, accent))
-    parts.push(scene.add.rectangle(18, 8, 12, 6, 0x41d8ff, 0.7))
-  } else if (look.prop === 'tablet') {
-    parts.push(scene.add.rectangle(16, 8, 12, 16, 0x2a1a40).setStrokeStyle(2, accent))
-  } else if (look.prop === 'core') {
-    parts.push(scene.add.circle(0, 8, 8, accent, 1).setStrokeStyle(2, 0xffe08a))
-    parts.push(scene.add.circle(0, 8, 4, 0xfff0c0, 0.9))
-  } else if (look.prop === 'book') {
-    parts.push(scene.add.rectangle(16, 10, 12, 14, 0x1a4a30).setStrokeStyle(2, accent))
-    parts.push(scene.add.rectangle(16, 10, 2, 14, 0xffe08a))
-  } else if (look.prop === 'shield') {
-    parts.push(scene.add.rectangle(-18, 8, 12, 18, 0x4a2028).setStrokeStyle(2, accent))
-    parts.push(scene.add.rectangle(-18, 6, 6, 6, 0xffe08a, 0.9))
-  } else if (look.prop === 'clipboard') {
-    parts.push(scene.add.rectangle(16, 8, 12, 16, 0xf0e8c0).setStrokeStyle(2, 0x07111f))
-    parts.push(scene.add.rectangle(16, 2, 8, 3, accent))
-  } else if (look.prop === 'wrench') {
-    parts.push(scene.add.rectangle(18, 6, 5, 18, 0xb0c0c8).setStrokeStyle(1, 0x07111f).setAngle(25))
-    parts.push(scene.add.circle(22, -2, 5, accent, 1).setStrokeStyle(1, 0x07111f))
-  } else if (look.prop === 'stylus') {
-    parts.push(scene.add.rectangle(16, 8, 12, 14, 0x2a1a30).setStrokeStyle(2, accent))
-    parts.push(scene.add.rectangle(22, 0, 3, 12, 0xffe08a).setAngle(20))
-  } else if (look.prop === 'scanner') {
-    parts.push(scene.add.rectangle(16, 6, 10, 14, 0x3a1018).setStrokeStyle(2, accent))
-  } else if (look.prop === 'glass') {
-    parts.push(scene.add.circle(16, 6, 7, 0xffffff, 0.15).setStrokeStyle(2, accent))
-  }
-}
-
-function makeAgent(scene, agent, onSelect) {
-  const look = AGENT_LOOKS[agent.id] || AGENT_LOOKS.randai
-  const tone = toColor(agent.tone || `#${look.accent.toString(16).padStart(6, '0')}`)
-  const accent = look.accent
-  const container = scene.add.container(0, 0).setSize(72, 88).setInteractive({ useHandCursor: true })
-
-  const shadow = scene.add.ellipse(0, 30, 42, 12, 0x02070d, 0.55)
-  const ring = scene.add.circle(0, 2, 30, accent, 0.12).setStrokeStyle(2, accent, 0.8)
-  const body = scene.add.rectangle(0, 8, 28, 30, 0xe8f0f4).setStrokeStyle(3, 0x07111f, 1)
-  const torso = scene.add.rectangle(0, 14, 34, 10, accent, 0.85).setStrokeStyle(2, 0x07111f, 1)
-  const head = scene.add.rectangle(0, -8, 30, 22, 0xe8f0f4).setStrokeStyle(3, 0x07111f, 1)
-  const visor = scene.add.rectangle(0, -8, 22, 10, 0x07111f).setStrokeStyle(2, accent, 1)
-  const eyeLeft = scene.add.rectangle(-6, -8, 4, 4, accent)
-  const eyeRight = scene.add.rectangle(6, -8, 4, 4, accent)
-  const legL = scene.add.rectangle(-7, 28, 8, 8, 0xc8d4dc).setStrokeStyle(2, 0x07111f)
-  const legR = scene.add.rectangle(7, 28, 8, 8, 0xc8d4dc).setStrokeStyle(2, 0x07111f)
-
-  const parts = [shadow, ring, body, torso, head, visor, eyeLeft, eyeRight, legL, legR]
-  addHat(parts, scene, look, accent)
-  addProp(parts, scene, look, accent)
-
-  const label = scene.add.text(0, 44, agent.name, {
-    color: '#ffffff',
-    backgroundColor: '#07111fee',
-    fontFamily: 'monospace',
-    fontSize: '10px',
-    fontStyle: 'bold',
-    padding: { left: 5, right: 5, top: 3, bottom: 3 },
-  }).setOrigin(0.5)
-  const activity = scene.add.text(0, 62, agent.life?.action || look.motto, {
-    color: agent.tone || '#67d9ff',
-    fontFamily: 'monospace',
-    fontSize: '8px',
-    backgroundColor: '#07111fcc',
-    padding: { left: 4, right: 4, top: 2, bottom: 2 },
-  }).setOrigin(0.5)
-
-  parts.push(label, activity)
-  container.add(parts)
-  container.on('pointerdown', () => onSelect?.(agent.id))
-  container.on('pointerover', () => ring.setStrokeStyle(4, 0xffffff, 1))
-  container.on('pointerout', () => ring.setStrokeStyle(2, accent, 0.8))
-  return { container, ring, activity, tone: accent, target: { x: 0, y: 0 }, tween: null }
-}
-
-function makeClient(scene, issue, index, onSelect) {
-  const aura = urgencyAura(issue.urgenza)
-  const emoji = problemEmoji(issue)
-  const pos = clientLane(issue, index)
-  const container = scene.add.container(pos.x, pos.y).setSize(48, 64).setInteractive({ useHandCursor: true })
-
-  const glow = scene.add.circle(0, 8, 26, aura.color, aura.alpha)
-  const shadow = scene.add.ellipse(0, 26, 28, 10, 0x02070d, 0.5)
-  const body = scene.add.rectangle(0, 10, 18, 22, 0x6f89a7).setStrokeStyle(3, 0x111923)
-  const head = scene.add.rectangle(0, -6, 16, 16, 0xe8c6a0).setStrokeStyle(3, 0x111923)
-  const leg = scene.add.rectangle(0, 24, 14, 6, 0x1c2530).setStrokeStyle(2, 0x111923)
-
-  const bubble = scene.add.rectangle(0, -30, 28, 22, 0xffffff, 1).setStrokeStyle(2, aura.color)
-  const bubbleTip = scene.add.triangle(0, -16, 0, 0, -5, -8, 5, -8, 0xffffff, 1)
-  const icon = scene.add.text(0, -32, emoji, { fontSize: '14px' }).setOrigin(0.5)
-  const tag = scene.add.text(0, 36, issue.camera || 'Hotel', {
-    color: '#f6ead8',
-    backgroundColor: '#0b1119dd',
-    fontFamily: 'monospace',
-    fontSize: '8px',
-    padding: { left: 4, right: 4, top: 2, bottom: 2 },
-  }).setOrigin(0.5)
-
-  container.add([glow, shadow, body, head, leg, bubbleTip, bubble, icon, tag])
-  container.on('pointerdown', () => onSelect?.(issue))
-  container.setDepth(8)
-  return { container, glow, aura, issueId: issue.id, pulse: aura.pulse }
-}
-
-export class LivingWorldScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'LivingWorld' })
-    this.agentNodes = new Map()
-    this.clientNodes = new Map()
-    this.selectedId = null
-    this.director = true
-    this.spawnPoints = new Map(objects('spawns').map(spawn => [spawn.name, { x: spawn.x, y: spawn.y }]))
-  }
-
-  create() {
-    const callbacks = this.game.config.callbacks || {}
-    this.onSelect = callbacks.onSelect
-    this.onSelectIssue = callbacks.onSelectIssue
-    this.paintWorld()
-    this.setAgents(callbacks.agents || [])
-    this.setClients(callbacks.issues || [])
-    this.bindCamera()
-    callbacks.onSceneReady?.(this)
-  }
-
-  paintWorld() {
-    this.cameras.main.setBackgroundColor('#050a12')
-    this.cameras.main.setBounds(0, 0, WORLD_SIZE.width, WORLD_SIZE.height)
-    this.cameras.main.centerOn(WORLD_SIZE.width / 2, WORLD_SIZE.height / 2)
-    const background = this.add.graphics()
-
-    // Night atrium + warm lobby floor (concept: blue night / gold / wood)
-    background.fillStyle(0x071525, 1).fillRect(0, 0, WORLD_SIZE.width, WORLD_SIZE.height)
-    background.fillStyle(0x0b2b45, 1).fillRect(0, 0, WORLD_SIZE.width, 230)
-    background.fillStyle(0x11273a, 1).fillRect(0, 230, WORLD_SIZE.width, 40)
-    drawCheckerFloor(background, 0, 270, WORLD_SIZE.width, WORLD_SIZE.height - 270, 0xb8956a, 0xa67d52)
-    drawGrid(background)
-
-    // Central red check-in runner
-    background.fillStyle(0x9a2a2a, 0.92).fillRect(560, 500, 160, 220)
-    background.lineStyle(3, 0xffd46c, 0.7).strokeRect(560, 500, 160, 220)
-    this.add.text(640, 700, 'CHECK IN · SOLVE ON · STAY BETTER', {
-      color: '#ffe9a8', fontFamily: 'monospace', fontSize: '9px', fontStyle: 'bold',
-    }).setOrigin(0.5)
-
-    for (let x = 48; x < WORLD_SIZE.width; x += 128) drawLamp(background, x, 38, x % 256 === 48 ? 0x41d8ff : 0xffc14f)
-    for (let i = 0; i < 26; i += 1) this.add.circle(30 + ((i * 173) % 1210), 30 + ((i * 71) % 150), i % 3 === 0 ? 2 : 1, 0xb9efff, 0.8)
-
-    for (const room of objects('rooms')) {
-      drawMappedRoom(this, background, room)
-      drawRoomLight(this, room)
-      for (const prop of propLayout(room)) drawHotelProp(this, background, prop)
-    }
-    for (const decoration of objects('decorations')) drawDecoration(this, background, decoration)
-    drawWayfinding(this, background)
-
-    const hubMap = objects('rooms').find(room => room.type === 'hub')
-    const hub = this.add.graphics()
-    const hubX = hubMap.x + hubMap.width / 2
-    const hubY = hubMap.y + hubMap.height / 2
-    hub.fillStyle(0x2ac9ff, 0.1).fillCircle(hubX, hubY, 148)
-    hub.fillStyle(0x0c456a, 0.96).fillCircle(hubX, hubY, 122)
-    hub.fillStyle(0x081827, 0.8).fillCircle(hubX, hubY, 84)
-    hub.lineStyle(5, 0x38d9ff, 0.95).strokeCircle(hubX, hubY, 122)
-    hub.lineStyle(2, 0xffd46c, 0.55).strokeCircle(hubX, hubY, 96)
-    hub.lineStyle(2, 0x8beaff, 0.35).lineBetween(hubX - 100, hubY, hubX + 100, hubY)
-    hub.lineBetween(hubX, hubY - 100, hubX, hubY + 100)
-    // Hologram core
-    hub.fillStyle(0x56b7ff, 0.35).fillCircle(hubX, hubY + 8, 28)
-    hub.fillStyle(0xe8f4ff, 0.9).fillCircle(hubX, hubY + 2, 14)
-    hub.fillStyle(0x56b7ff, 1).fillCircle(hubX - 4, hubY, 3)
-    hub.fillStyle(0x56b7ff, 1).fillCircle(hubX + 4, hubY, 3)
-    this.add.text(hubX, hubY - 48, property(hubMap, 'title'), { color: '#e9fbff', fontFamily: 'monospace', fontSize: '20px', fontStyle: 'bold' }).setOrigin(0.5)
-    this.add.text(hubX, hubY - 26, property(hubMap, 'subtitle'), { color: '#8deaff', fontFamily: 'monospace', fontSize: '10px', letterSpacing: 1 }).setOrigin(0.5)
-    this.add.text(hubX, hubY + 58, 'ALL AIS WELCOME', { color: '#b7f5ff', fontFamily: 'monospace', fontSize: '10px' }).setOrigin(0.5)
-    this.add.text(hubX, hubY + 76, 'CLICK AN NPC TO FOLLOW', { color: '#6cc6df', fontFamily: 'monospace', fontSize: '9px' }).setOrigin(0.5)
-
-    const collision = this.add.graphics()
-    for (const wall of objects('collision')) {
-      collision.fillStyle(0x02070d, 0.45).fillRect(wall.x, wall.y, wall.width, wall.height)
-      collision.lineStyle(2, 0x6ea4ba, 0.3).strokeRect(wall.x, wall.y, wall.width, wall.height)
-    }
-    for (const door of objects('doors')) {
-      collision.fillStyle(0xffc14f, 0.95).fillRect(door.x, door.y, door.width, door.height)
-      collision.lineStyle(1, 0xfff0a8, 0.85).strokeRect(door.x, door.y, door.width, door.height)
-    }
-    this.add.text(640, 24, 'RANDAILIVE HOTEL', { color: '#ffe9a8', fontFamily: 'monospace', fontSize: '20px', fontStyle: 'bold' }).setOrigin(0.5)
-    this.add.text(640, 48, 'PIXEL HALL  ·  CHECK IN, SOLVE ON, STAY BETTER', { color: '#54d8ff', fontFamily: 'monospace', fontSize: '10px', letterSpacing: 2 }).setOrigin(0.5)
-  }
-
-  bindCamera() {
-    const camera = this.cameras.main
-    let dragging = false
-    let previous = null
-    this.input.on('pointerdown', pointer => { if (pointer.button === 0) { dragging = true; previous = { x: pointer.x, y: pointer.y } } })
-    this.input.on('pointermove', pointer => {
-      if (!dragging || !previous || pointer.isDown === false) return
-      camera.scrollX -= (pointer.x - previous.x) / camera.zoom
-      camera.scrollY -= (pointer.y - previous.y) / camera.zoom
-      previous = { x: pointer.x, y: pointer.y }
-    })
-    this.input.on('pointerup', () => { dragging = false; previous = null })
-    this.input.on('wheel', (_pointer, _over, _dx, dy) => camera.setZoom(Phaser.Math.Clamp(camera.zoom - dy * 0.001, 0.72, 1.35)))
-  }
-
-  setAgents(agents) {
-    for (const agent of agents) {
-      let node = this.agentNodes.get(agent.id)
-      if (!node) {
-        node = makeAgent(this, agent, this.onSelect)
-        this.agentNodes.set(agent.id, node)
-      }
-      const spawn = this.spawnPoints.get(agent.id) || hubCenter()
-      const zone = agent.life?.zone || 'hub'
-      if (!node.initialized) {
-        node.container.setPosition(spawn.x, spawn.y)
-        node.initialized = true
-      }
-      if (node.zone !== zone) {
-        const route = routeFor({ x: node.container.x, y: node.container.y }, node.zone, zone)
-        if (node.tween) node.tween.stop()
-        node.route = route
-        node.zone = zone
-        node.target = node.route.shift() || spawn
-      }
-      node.activity.setText(agent.life?.action || 'Disponibile')
-      node.activity.setColor(agent.tone || '#67d9ff')
+  setAgents(agents){
+    for(const a of agents){
+      let n=this.agentNodes.get(a.id)
+      if(!n){n=makeAgent(this,a,this.onSelect);this.agentNodes.set(a.id,n);const home=areaById(a.life?.zone||'hub');const p=centerOf(home);n.container.setPosition(p.x,p.y);n.zone=a.life?.zone||'hub'}
+      const z=a.life?.zone||'hub'
+      if(n.zone!==z){n.route=routeBetween(n.zone,z);n.zone=z;n.target=n.route.shift()||centerOf(areaById(z))}
     }
     this.updateSelection(this.selectedId)
   }
-
-  setClients(issues) {
-    const alive = new Set()
-    for (const [index, issue] of (issues || []).entries()) {
-      alive.add(issue.id)
-      let node = this.clientNodes.get(issue.id)
-      if (!node) {
-        node = makeClient(this, issue, index, this.onSelectIssue)
-        this.clientNodes.set(issue.id, node)
-      } else {
-        const pos = clientLane(issue, index)
-        node.container.setPosition(pos.x, pos.y)
-        const aura = urgencyAura(issue.urgenza)
-        node.glow.setFillStyle(aura.color, aura.alpha)
-        node.aura = aura
-        node.pulse = aura.pulse
-      }
-    }
-    for (const [id, node] of this.clientNodes) {
-      if (!alive.has(id)) {
-        node.container.destroy(true)
-        this.clientNodes.delete(id)
-      }
-    }
+  setClients(issues){
+    const alive=new Set()
+    for(const [i,issue] of (issues||[]).entries()){alive.add(issue.id);if(!this.clientNodes.has(issue.id))this.clientNodes.set(issue.id,makeClient(this,issue,i,this.onSelectIssue))}
+    for(const [id,n] of this.clientNodes)if(!alive.has(id)){n.container.destroy(true);this.clientNodes.delete(id)}
   }
-
-  updateSelection(id) {
-    this.selectedId = id
-    for (const [agentId, node] of this.agentNodes) {
-      const active = agentId === id
-      node.ring.setStrokeStyle(active ? 5 : 2, active ? 0xffffff : node.tone, active ? 1 : 0.75)
-      node.container.setDepth(active ? 20 : 10)
-      node.container.setAlpha(this.director && id && !active ? 0.42 : 1)
-    }
+  updateSelection(id){
+    this.selectedId=id
+    for(const [aid,n] of this.agentNodes){const active=aid===id;n.ring.setStrokeStyle(active?3:1,active?0xffffff:0x55d8ff,active?1:.7);n.container.setAlpha(this.director&&id&&!active?.5:1)}
   }
-
-  setDirector(enabled) {
-    this.director = enabled
-    this.updateSelection(this.selectedId)
-  }
-
-  update(time) {
-    for (const node of this.agentNodes.values()) {
-      const distance = Phaser.Math.Distance.Between(node.container.x, node.container.y, node.target.x, node.target.y)
-      if (distance <= 4 && node.route?.length && !node.tween) {
-        node.target = node.route.shift()
-      }
-      if (distance > 4 && !node.tween) node.tween = this.tweens.add({ targets: node.container, x: node.target.x, y: node.target.y, duration: 1800, ease: 'Sine.easeInOut', onComplete: () => { node.tween = null } })
-      node.container.rotation = Math.sin((time + node.container.x) / 5000) * 0.015
+  setDirector(v){this.director=v;this.updateSelection(this.selectedId)}
+  update(time){
+    for(const n of this.agentNodes.values()){
+      if(!n.target||(!n.route.length&&Math.abs(n.container.x-n.target.x)<3&&Math.abs(n.container.y-n.target.y)<3))continue
+      const d=Phaser.Math.Distance.Between(n.container.x,n.container.y,n.target.x,n.target.y)
+      if(d<4&&n.route.length&&!n.tween)n.target=n.route.shift()
+      if(d>4&&!n.tween)n.tween=this.tweens.add({targets:n.container,x:n.target.x,y:n.target.y,duration:900,ease:'Linear',onComplete:()=>{n.tween=null}})
     }
-    for (const node of this.clientNodes.values()) {
-      const scale = 1 + Math.sin(time / (220 - node.pulse * 120)) * node.pulse * 0.12
-      node.glow.setScale(scale)
-      node.glow.setAlpha(node.aura.alpha * (0.75 + node.pulse * 0.4 * Math.abs(Math.sin(time / 180))))
-    }
+    for(const n of this.clientNodes.values()){const s=1+Math.sin(time/240)*.05;n.glow.setScale(s)}
   }
 }
 
-export function createLivingWorldGame(parent, callbacks) {
-  return new Phaser.Game({
-    type: Phaser.AUTO,
-    parent,
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#050a12',
-    pixelArt: true,
-    antialias: false,
-    scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
-    callbacks,
-    scene: LivingWorldScene,
-  })
+export function createLivingWorldGame(parent,callbacks){
+  return new Phaser.Game({type:Phaser.AUTO,parent,width:'100%',height:'100%',backgroundColor:'#061018',pixelArt:true,antialias:false,scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},callbacks,scene:LivingWorldScene})
 }
