@@ -183,3 +183,21 @@ La pipeline grafica adotta i principi tecnici osservati in StarNet senza incorpo
 - la separazione modello → render permette in futuro un editor/refit, asset atlas, collisioni per prop e bake/cache senza cambiare la logica operativa.
 
 Principio di licenza: si riusano **pattern e codice MIT dove utile**, ma non gli asset artistici e il branding StarNet, che il progetto upstream dichiara esclusi dalla licenza del codice.
+
+
+## Rebuild grafico v2 · Hotel Giò continuo
+
+La prima visual-overhaul basata su grandi riquadri-stanza è stata scartata dopo revisione visiva su mobile.
+
+La v2 sostituisce quel renderer con una planimetria continua:
+
+- edificio unico invece di griglia di card;
+- corridoio camere superiore, lobby/reception centrale, aree pubbliche e corridoio servizi;
+- porte e percorsi condivisi usati dagli agenti per attraversare realmente le zone;
+- arredi più piccoli e proporzionati all'ambiente;
+- agenti ridotti di scala per leggere l'hotel come mondo, non come dashboard;
+- identità Hotel Giò separata dall'HUD e dai pannelli React;
+- nuova fonte dati `hotel-layout-v2.js`, indipendente dal renderer Phaser;
+- vecchio `hotel-visual-system.js` eliminato dal codice attivo.
+
+La regola resta: artwork StarNet non viene copiato. Della repository upstream si sfruttano pattern tecnici e architetturali compatibili con MIT, mentre mondo, grafica e personaggi restano Rand.
