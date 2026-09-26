@@ -1,5 +1,5 @@
-# Default stays on the Apicehotel path to prove it is still the wrong app (RandApp).
-# Staging on DigitalOcean: RANDAILIVE_LIVE_URL=https://YOUR-APP.ondigitalocean.app npm run verify:live
+// Default stays on the Apicehotel path to prove it is still the wrong app (RandApp).
+// Staging on DigitalOcean: RANDAILIVE_LIVE_URL=https://YOUR-APP.ondigitalocean.app npm run verify:live
 const target = process.argv[2] || process.env.RANDAILIVE_LIVE_URL || 'https://apicehotel.vercel.app/randailive'
 
 const response = await fetch(target, { redirect: 'follow' })

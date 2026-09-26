@@ -68,11 +68,17 @@ export class LivingWorldScene extends Phaser.Scene{
   fitCamera(animate=true){
     if(!this.hotel)return
     const cam=this.cameras.main,b=this.hotel.bounds,pad=120
-    cam.setBounds(b.x-pad,b.y-pad,b.width+pad*2,b.height+pad*2)
     const fit=Math.min(this.scale.width/(b.width+pad),this.scale.height/(b.height+pad))*.92
     const zoom=Phaser.Math.Clamp(fit,this.scale.width<760?.22:.25,this.scale.width<760?.62:.78)
-    if(animate)cam.pan(b.centerX,b.centerY,280,'Sine.easeInOut');else cam.centerOn(b.centerX,b.centerY)
     cam.setZoom(zoom)
+    // Phaser clamps a camera to the top edge when the visible world is taller
+    // than its bounds. Expand the bounds around the hotel to at least one
+    // viewport so wide isometric floors remain vertically centred.
+    const viewWidth=this.scale.width/zoom,viewHeight=this.scale.height/zoom
+    const boundsWidth=Math.max(b.width+pad*2,viewWidth)
+    const boundsHeight=Math.max(b.height+pad*2,viewHeight)
+    cam.setBounds(b.centerX-boundsWidth/2,b.centerY-boundsHeight/2,boundsWidth,boundsHeight)
+    if(animate)cam.pan(b.centerX,b.centerY,280,'Sine.easeInOut');else cam.centerOn(b.centerX,b.centerY)
   }
 
   bindCamera(){

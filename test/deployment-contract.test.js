@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import { spawnSync } from 'node:child_process'
 
 test('live verification guards the Apice path and accepts DigitalOcean staging', () => {
   const script = fs.readFileSync('scripts/verify-live.mjs', 'utf8')
@@ -15,4 +16,9 @@ test('live verification guards the Apice path and accepts DigitalOcean staging',
   assert.ok(fs.existsSync('Dockerfile'))
   assert.ok(fs.existsSync('.do/app.yaml'))
   assert.ok(fs.existsSync('deploy/nginx.conf'))
+
+  const syntax = spawnSync(process.execPath, ['--check', 'scripts/verify-live.mjs'], {
+    encoding: 'utf8',
+  })
+  assert.equal(syntax.status, 0, syntax.stderr)
 })
