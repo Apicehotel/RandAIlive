@@ -141,7 +141,7 @@ export function buildIsoHotel(scene,mapId='ground',{onElevator}={}){
   const base=scene.add.ellipse(bounds.centerX,bounds.centerY+90,bounds.width*.88,bounds.height*.53,0x000000,.32).setDepth(-50000);nodes.push(base)
   for(const tile of tiles){
     const room=areaAt(map,tile.x,tile.y),p=gridToScreen(tile.x+.5,tile.y+.5)
-    const image=scene.add.image(p.x,p.y,floorTexture(themeFor(room).floor)).setOrigin(.5).setDepth(-10000+isoDepth(tile.x,tile.y));nodes.push(image)
+    const image=scene.add.image(p.x,p.y,floorTexture(themeFor(room).floor,tile.x,tile.y)).setOrigin(.5).setDepth(-10000+isoDepth(tile.x,tile.y));nodes.push(image)
   }
   nodes.push(...addAmbientPools(scene,map),...drawWalls(scene,map,tiles),...drawDoorways(scene,map),...drawIsoProps(scene,map),...addCeilingLights(scene,map))
   for(const room of map.areas){const label=addRoomLabel(scene,map,room);if(label)nodes.push(label)}

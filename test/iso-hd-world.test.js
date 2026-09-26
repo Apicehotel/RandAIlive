@@ -1,12 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { gridToScreen, screenToGrid, ISO_TILE_W, ISO_TILE_H } from '../src/iso/iso-math.js'
+import { floorTexture } from '../src/iso/iso-textures.js'
 import { ISO_MAPS, ISO_WORLD, allTiles, destinationForZone, isStepWalkable, roomById, routeAreas, tilesForRoom } from '../src/iso/iso-world.js'
 
 test('isometric projection uses HD 2:1 tiles and round-trips',()=>{
   assert.equal(ISO_TILE_W,128);assert.equal(ISO_TILE_H,64)
   const p=gridToScreen(4.25,7.5),g=screenToGrid(p.x,p.y)
   assert.ok(Math.abs(g.gx-4.25)<1e-9);assert.ok(Math.abs(g.gy-7.5)<1e-9)
+})
+
+test('floor materials use deterministic variants to avoid visible tiling',()=>{
+  const variants=new Set(Array.from({length:8},(_,x)=>floorTexture('marble',x,0)))
+  assert.equal(variants.size,4)
+  assert.equal(floorTexture('jazzCarpet',3,7),floorTexture('jazzCarpet',3,7))
+  assert.match(floorTexture('unknown',0,0),/^iso-floor-marble-/)
 })
 
 test('ground floor uses an irregular connected hotel footprint',()=>{

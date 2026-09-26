@@ -1,94 +1,181 @@
 import { ISO_TILE_H, ISO_TILE_W } from './iso-math.js'
 
+// Materials deliberately stay low-contrast. Strong motifs repeated once per
+// tile make an isometric floor look like a board game instead of architecture.
 const palettes={
-  marble:{base:0xd8c9ae,light:0xf6ead4,dark:0xa89576,line:0x8b775b,accent:0xb89762,pattern:'marble'},
-  marbleDark:{base:0x918777,light:0xc9bca4,dark:0x5f584d,line:0x50483e,accent:0xd0ad67,pattern:'marble'},
-  wood:{base:0x956845,light:0xc08b5a,dark:0x593b2b,line:0x463025,accent:0xd0a06b,pattern:'wood'},
-  woodDark:{base:0x674531,light:0x9b6b49,dark:0x3b281f,line:0x2d2019,accent:0xb27b51,pattern:'wood'},
-  carpet:{base:0x5b2832,light:0x8d4350,dark:0x351820,line:0x2a1219,accent:0xd0a257,pattern:'carpet'},
-  service:{base:0x6f7b7f,light:0x9ba8ab,dark:0x424b4f,line:0x343c40,accent:0xc7d1d2,pattern:'service'},
-  serviceRunner:{base:0x626d70,light:0x8e999c,dark:0x394246,line:0x30383b,accent:0xe9b24e,pattern:'serviceRunner'},
-  technical:{base:0x48555b,light:0x718087,dark:0x293238,line:0x20282c,accent:0x55d7e9,pattern:'technical'},
-  concrete:{base:0x77756f,light:0x99968d,dark:0x4d4b47,line:0x3d3b38,accent:0xc5a45c,pattern:'concrete'},
-  stone:{base:0x929184,light:0xbab9a8,dark:0x62625a,line:0x505149,accent:0x9dc6aa,pattern:'stone'},
-  rubber:{base:0x384247,light:0x59656a,dark:0x20272b,line:0x181e21,accent:0x72c9d7,pattern:'rubber'},
-  kitchen:{base:0xaeb8b8,light:0xdce2df,dark:0x707c7d,line:0x5d6869,accent:0xd49b43,pattern:'kitchen'},
-  corridor:{base:0xc4b18e,light:0xead7af,dark:0x887255,line:0x705c45,accent:0x7c2938,pattern:'runner'},
-  jazzCarpet:{base:0x33495a,light:0x54738a,dark:0x1f2e39,line:0x182631,accent:0xd1a64e,pattern:'jazz'},
-  jazzCorridor:{base:0x43566a,light:0x657d94,dark:0x273746,line:0x1e2d39,accent:0xd8aa4c,pattern:'runner'},
-  wineCarpet:{base:0x592d3c,light:0x82465a,dark:0x351a25,line:0x29131c,accent:0xc99755,pattern:'wine'},
-  wineCorridor:{base:0x68404b,light:0x915b69,dark:0x3e252e,line:0x301b23,accent:0xd1a15f,pattern:'runner'},
+  marble:{base:0xd8d1c2,light:0xf1ede4,dark:0xaaa394,line:0x8f887b,accent:0xb59a70,pattern:'marble'},
+  marbleDark:{base:0x77736c,light:0xa39e93,dark:0x4f4c47,line:0x45423d,accent:0xbda477,pattern:'marble'},
+  wood:{base:0x8e6345,light:0xb7845e,dark:0x583c2d,line:0x4d3528,accent:0xc2946d,pattern:'wood'},
+  woodDark:{base:0x5d4031,light:0x805b45,dark:0x382820,line:0x30231c,accent:0x9d7255,pattern:'wood'},
+  carpet:{base:0x54333a,light:0x74505a,dark:0x39252b,line:0x312027,accent:0xa88468,pattern:'carpet'},
+  service:{base:0x778083,light:0x969ea0,dark:0x555d60,line:0x485053,accent:0xaeb7b9,pattern:'epoxy'},
+  serviceRunner:{base:0x687276,light:0x889296,dark:0x454e52,line:0x3b4448,accent:0xc7a965,pattern:'serviceRunner'},
+  technical:{base:0x465155,light:0x657176,dark:0x2f383c,line:0x273034,accent:0x57909a,pattern:'technical'},
+  concrete:{base:0x85827b,light:0xa39f96,dark:0x625f59,line:0x56534e,accent:0xa9916c,pattern:'mineral'},
+  stone:{base:0x99998f,light:0xb8b8ad,dark:0x74756d,line:0x65665f,accent:0x819d8d,pattern:'stone'},
+  rubber:{base:0x374044,light:0x505b5f,dark:0x252d30,line:0x20272a,accent:0x587d83,pattern:'rubber'},
+  kitchen:{base:0xb3b8b6,light:0xd2d6d3,dark:0x858c8b,line:0x737a79,accent:0xb29b70,pattern:'kitchen'},
+  corridor:{base:0x9c8770,light:0xb6a28b,dark:0x766351,line:0x685544,accent:0x6d3c43,pattern:'woven'},
+  jazzCarpet:{base:0x344654,light:0x4c6272,dark:0x24323c,line:0x1f2c35,accent:0x9b8964,pattern:'carpet'},
+  jazzCorridor:{base:0x445666,light:0x5e7080,dark:0x30404d,line:0x293843,accent:0xad9360,pattern:'woven'},
+  wineCarpet:{base:0x573a43,light:0x74515c,dark:0x3b2930,line:0x332229,accent:0xa88b70,pattern:'carpet'},
+  wineCorridor:{base:0x654851,light:0x81616a,dark:0x49323a,line:0x3e2b32,accent:0xb09272,pattern:'woven'},
 }
 
-function diamond(g,color,alpha=1,inset=0){
-  const hw=ISO_TILE_W/2,hh=ISO_TILE_H/2
-  g.fillStyle(color,alpha).fillPoints([{x:hw,y:inset/2},{x:ISO_TILE_W-inset,y:hh},{x:hw,y:ISO_TILE_H-inset/2},{x:inset,y:hh}],true)
-}
-const line=(g,a,b,color,width=1,alpha=.5)=>g.lineStyle(width,color,alpha).lineBetween(a.x,a.y,b.x,b.y)
+const point=(x,y)=>({x,y})
+const diamondPoints=(inset=0)=>[
+  point(ISO_TILE_W/2,inset/2),
+  point(ISO_TILE_W-inset,ISO_TILE_H/2),
+  point(ISO_TILE_W/2,ISO_TILE_H-inset/2),
+  point(inset,ISO_TILE_H/2),
+]
 
-function runner(g,p,width=.62){
-  const cx=64,half=40*width
-  g.fillStyle(p.accent,.94).fillPoints([{x:cx,y:11},{x:cx+half,y:32},{x:cx,y:53},{x:cx-half,y:32}],true)
-  g.lineStyle(2,p.light,.36).strokePoints([{x:cx,y:14},{x:cx+half-5,y:32},{x:cx,y:50},{x:cx-half+5,y:32}],true)
-  g.lineStyle(1,0xffffff,.15).strokePoints([{x:cx,y:18},{x:cx+half-12,y:32},{x:cx,y:46},{x:cx-half+12,y:32}],true)
-}
-
-function drawPattern(g,p,type){
-  const hw=64,hh=32
-  if(type==='wood'){
-    for(let i=0;i<8;i++){
-      const t=i/8
-      line(g,{x:hw*t,y:hh*(1-t)},{x:hw+hw*t,y:64-hh*(1-t)},p.line,i%3===0?2:1,.34)
-      if(i%2===0)line(g,{x:hw*t+7,y:hh*(1-t)+4},{x:hw+hw*t-10,y:64-hh*(1-t)-3},p.light,1,.12)
-    }
-  }else if(type==='marble'){
-    line(g,{x:12,y:35},{x:52,y:20},p.light,2,.25);line(g,{x:52,y:20},{x:87,y:34},p.dark,1,.18)
-    line(g,{x:43,y:51},{x:107,y:27},p.light,1,.18);line(g,{x:73,y:44},{x:111,y:31},p.accent,1,.12)
-  }else if(type==='carpet'||type==='jazz'||type==='wine'){
-    for(let y=14;y<55;y+=7)for(let x=18;x<112;x+=12){
-      const on=((x*3+y*5)%4)===0
-      g.fillStyle(on?p.accent:(x+y)%3?p.light:p.dark,on?.13:.09).fillCircle(x,y,on?1.4:1)
-    }
-    if(type==='jazz')line(g,{x:30,y:37},{x:78,y:22},p.accent,2,.12)
-    if(type==='wine')for(let x=34;x<95;x+=20)g.lineStyle(1,p.accent,.12).strokeCircle(x,32,4)
-  }else if(type==='service'||type==='kitchen'){
-    line(g,{x:64,y:2},{x:64,y:62},p.line,1,.35);line(g,{x:9,y:32},{x:119,y:32},p.line,1,.25)
-    for(let x=28;x<108;x+=26)g.fillStyle(p.light,.32).fillCircle(x,32,1.6)
-  }else if(type==='serviceRunner'){
-    line(g,{x:64,y:3},{x:64,y:61},p.line,1,.32);runner(g,p,.34)
-    line(g,{x:35,y:30},{x:57,y:22},0x1e2528,3,.45);line(g,{x:71,y:42},{x:94,y:34},0x1e2528,3,.45)
-  }else if(type==='technical'){
-    for(let x=24;x<108;x+=18)g.fillStyle(p.dark,.42).fillCircle(x,32,2)
-    line(g,{x:18,y:34},{x:64,y:18},p.accent,2,.16);line(g,{x:64,y:46},{x:109,y:31},p.accent,2,.16)
-  }else if(type==='stone'||type==='concrete'){
-    line(g,{x:15,y:35},{x:64,y:18},p.line,1,.28);line(g,{x:64,y:18},{x:111,y:34},p.line,1,.22)
-    line(g,{x:38,y:49},{x:89,y:31},p.dark,1,.2)
-  }else if(type==='rubber'){
-    for(let y=18;y<49;y+=7)for(let x=25;x<104;x+=14)g.fillStyle(p.dark,.38).fillCircle(x,y,2.1)
-  }else if(type==='runner')runner(g,p)
+function random(seed,index=0){
+  const value=Math.sin((seed+1)*91.733+(index+1)*37.719)*43758.5453
+  return value-Math.floor(value)
 }
 
-function drawTile(g,p){
-  diamond(g,p.base)
-  drawPattern(g,p,p.pattern)
-  line(g,{x:0,y:32},{x:64,y:64},p.dark,2,.48)
-  line(g,{x:64,y:64},{x:128,y:32},p.dark,2,.48)
-  line(g,{x:64,y:0},{x:128,y:32},p.light,2,.38)
-  line(g,{x:0,y:32},{x:64,y:0},p.light,2,.3)
-  diamond(g,0xffffff,.025,4)
-  for(let i=0;i<32;i++){
-    const x=8+((i*37)%112),y=7+((i*23)%50)
-    g.fillStyle(i%4===0?p.light:p.dark,i%4===0?.055:.035).fillCircle(x,y,.75)
+function insideDiamond(x,y,inset=5){
+  const nx=Math.abs(x-ISO_TILE_W/2)/(ISO_TILE_W/2-inset)
+  const ny=Math.abs(y-ISO_TILE_H/2)/(ISO_TILE_H/2-inset/2)
+  return nx+ny<=1
+}
+
+function segment(g,a,b,color,width=1,alpha=.5){
+  g.lineStyle(width,color,alpha).lineBetween(a.x,a.y,b.x,b.y)
+}
+
+function scatter(g,p,seed,count=34,alpha=.045,size=.65){
+  for(let i=0;i<count;i++){
+    const x=5+random(seed,i*2)*118,y=4+random(seed,i*2+1)*56
+    if(!insideDiamond(x,y,4))continue
+    const light=random(seed,i+91)>.54
+    g.fillStyle(light?p.light:p.dark,alpha*(light?1:.82)).fillCircle(x,y,size+random(seed,i+171)*.35)
   }
+}
+
+function drawMarble(g,p,seed){
+  for(let vein=0;vein<2;vein++){
+    const baseY=19+random(seed,vein)*22
+    const pts=[]
+    for(let i=0;i<6;i++){
+      const x=16+i*19
+      const y=baseY+(i-2.5)*3.4+(random(seed,vein*20+i)-.5)*7
+      if(insideDiamond(x,y,7))pts.push(point(x,y))
+    }
+    for(let i=1;i<pts.length;i++)segment(g,pts[i-1],pts[i],vein?p.accent:p.light,vein?1:1.35,vein?.09:.16)
+  }
+  scatter(g,p,seed,22,.032,.55)
+}
+
+function drawWood(g,p,seed){
+  const shift=(random(seed,2)-.5)*8
+  for(let i=-2;i<9;i++){
+    const sx=8+i*16+shift
+    segment(g,point(sx,35-sx*.22),point(sx+56,48-sx*.22),p.line,i%3===0?1.25:.7,i%3===0?.22:.12)
+    if(i%2===0)segment(g,point(sx+9,36-sx*.22),point(sx+38,42-sx*.22),p.light,.7,.09)
+  }
+  segment(g,point(24,41),point(83,20),p.dark,1,.17)
+  segment(g,point(49,53),point(108,32),p.dark,1,.14)
+  scatter(g,p,seed,18,.035,.5)
+}
+
+function drawCarpet(g,p,seed){
+  scatter(g,p,seed,82,.055,.52)
+  for(let i=0;i<7;i++){
+    const x=22+random(seed,200+i)*84,y=17+random(seed,230+i)*30
+    if(insideDiamond(x,y,9))segment(g,point(x-2,y+1),point(x+3,y-1),i%3===0?p.accent:p.light,.65,i%3===0?.09:.06)
+  }
+}
+
+function drawWoven(g,p,seed){
+  drawCarpet(g,p,seed)
+  g.lineStyle(1,p.accent,.13).strokePoints(diamondPoints(15),true)
+  g.lineStyle(1,p.light,.075).strokePoints(diamondPoints(22),true)
+}
+
+function drawEpoxy(g,p,seed){
+  scatter(g,p,seed,42,.04,.58)
+  segment(g,point(10,32),point(64,51),p.line,1,.12)
+  segment(g,point(64,13),point(118,32),p.light,1,.09)
+}
+
+function drawServiceRunner(g,p,seed){
+  drawEpoxy(g,p,seed)
+  segment(g,point(38,18),point(92,37),p.accent,1.2,.2)
+  segment(g,point(36,46),point(90,27),p.accent,1.2,.16)
+}
+
+function drawTechnical(g,p,seed){
+  scatter(g,p,seed,28,.035,.55)
+  for(let y=21;y<47;y+=8)for(let x=28;x<105;x+=15){
+    if(insideDiamond(x,y,8))g.fillStyle(p.dark,.23).fillCircle(x,y,1.25)
+  }
+}
+
+function drawMineral(g,p,seed,stone=false){
+  scatter(g,p,seed,stone?48:31,.045,.7)
+  if(stone){
+    segment(g,point(23,38),point(62,24),p.line,1,.13)
+    segment(g,point(62,24),point(99,37),p.line,1,.11)
+  }
+}
+
+function drawRubber(g,p,seed){
+  scatter(g,p,seed,20,.03,.5)
+  for(let y=22;y<46;y+=8)for(let x=31;x<101;x+=14){
+    if(insideDiamond(x,y,9))g.fillStyle(p.dark,.3).fillCircle(x,y,1.55)
+  }
+}
+
+function drawKitchen(g,p,seed){
+  drawEpoxy(g,p,seed)
+  segment(g,point(37,23),point(90,42),p.line,1,.16)
+  segment(g,point(37,42),point(90,23),p.line,1,.13)
+}
+
+function drawPattern(g,p,seed){
+  if(p.pattern==='marble')drawMarble(g,p,seed)
+  else if(p.pattern==='wood')drawWood(g,p,seed)
+  else if(p.pattern==='carpet')drawCarpet(g,p,seed)
+  else if(p.pattern==='woven')drawWoven(g,p,seed)
+  else if(p.pattern==='epoxy')drawEpoxy(g,p,seed)
+  else if(p.pattern==='serviceRunner')drawServiceRunner(g,p,seed)
+  else if(p.pattern==='technical')drawTechnical(g,p,seed)
+  else if(p.pattern==='mineral')drawMineral(g,p,seed)
+  else if(p.pattern==='stone')drawMineral(g,p,seed,true)
+  else if(p.pattern==='rubber')drawRubber(g,p,seed)
+  else if(p.pattern==='kitchen')drawKitchen(g,p,seed)
+}
+
+function drawTile(g,p,seed){
+  g.fillStyle(p.base,1).fillPoints(diamondPoints(),true)
+  g.fillStyle(p.light,.025).fillPoints(diamondPoints(5),true)
+  drawPattern(g,p,seed)
+  g.lineStyle(1,p.dark,.22).strokePoints(diamondPoints(1),true)
+  segment(g,point(2,32),point(64,1),p.light,1,.17)
+  segment(g,point(64,1),point(126,32),p.light,1,.13)
 }
 
 export function generateIsoTextures(scene){
-  for(const [type,p] of Object.entries(palettes)){
-    const key=`iso-floor-${type}`
-    if(scene.textures.exists(key))continue
-    const g=scene.add.graphics();drawTile(g,p);g.generateTexture(key,ISO_TILE_W,ISO_TILE_H);g.destroy()
+  const materials=Object.entries(palettes)
+  for(let materialIndex=0;materialIndex<materials.length;materialIndex++){
+    const [type,p]=materials[materialIndex]
+    for(let variant=0;variant<4;variant++){
+      const key=`iso-floor-${type}-${variant}`
+      if(scene.textures.exists(key))continue
+      const g=scene.add.graphics()
+      drawTile(g,p,variant+materialIndex*11)
+      g.generateTexture(key,ISO_TILE_W,ISO_TILE_H)
+      g.destroy()
+    }
   }
 }
 
-export const floorTexture=type=>`iso-floor-${palettes[type]?type:'marble'}`
+export function floorTexture(type,x=0,y=0){
+  const material=palettes[type]?type:'marble'
+  const variant=Math.abs((Math.trunc(x)*17+Math.trunc(y)*31)%4)
+  return `iso-floor-${material}-${variant}`
+}
+
 export const ISO_PALETTES=palettes
