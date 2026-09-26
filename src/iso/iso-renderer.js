@@ -73,13 +73,19 @@ function doorwayEdge(d){
 function drawDoorways(scene,map){
   const nodes=[],seen=new Set()
   for(const d of map.doors){
-    const edge=doorwayEdge(d),key=pairKey(edge[0],edge[1]);if(seen.has(key))continue;seen.add(key)
-    const a=gridToScreen(edge[0].x,edge[0].y),b=gridToScreen(edge[1].x,edge[1].y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2
-    const depth=20500+isoDepth((edge[0].x+edge[1].x)/2,(edge[0].y+edge[1].y)/2)
+    const horizontal=d.a.y===d.b.y,segments=[]
+    for(let i=0;i<(d.width||1);i++){
+      const shifted={...d,a:{x:d.a.x+(horizontal?0:i),y:d.a.y+(horizontal?i:0)},b:{x:d.b.x+(horizontal?0:i),y:d.b.y+(horizontal?i:0)}}
+      const edge=doorwayEdge(shifted),key=pairKey(edge[0],edge[1]);if(seen.has(key))continue;seen.add(key);segments.push(edge)
+    }
+    if(!segments.length)continue
+    const first=segments[0][0],last=segments.at(-1)[1],a=gridToScreen(first.x,first.y),b=gridToScreen(last.x,last.y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2
+    const depth=20500+isoDepth((first.x+last.x)/2,(first.y+last.y)/2)
     const g=scene.add.graphics().setDepth(depth)
-    g.lineStyle(12,0x4b3024,.95).lineBetween(a.x,a.y,b.x,b.y)
-    g.lineStyle(7,0xd3aa61,.92).lineBetween(a.x,a.y-2,b.x,b.y-2)
-    g.lineStyle(2,0xffedbf,.62).lineBetween(a.x,a.y-4,b.x,b.y-4)
+    for(const edge of segments){
+      const s=gridToScreen(edge[0].x,edge[0].y),e=gridToScreen(edge[1].x,edge[1].y)
+      g.lineStyle(12,0x4b3024,.95).lineBetween(s.x,s.y,e.x,e.y);g.lineStyle(7,0xd3aa61,.92).lineBetween(s.x,s.y-2,e.x,e.y-2);g.lineStyle(2,0xffedbf,.62).lineBetween(s.x,s.y-4,e.x,e.y-4)
+    }
     for(const p of [a,b]){
       g.fillStyle(0x3d2b22,1).fillRect(p.x-4,p.y-52,8,52)
       g.fillStyle(0xd3aa61,1).fillRect(p.x-2,p.y-51,4,48)
