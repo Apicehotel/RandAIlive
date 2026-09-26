@@ -8,10 +8,15 @@ This document separates assets actually shipped by RandAILive from packs and rep
 
 | Source | Type | License | Files / use |
 |---|---|---|---|
-| Rand procedural artwork | Original code-generated materials and props | Project-owned | `src/iso/iso-textures.js`, `src/iso/iso-props.js`, `src/iso/iso-renderer.js` |
+| Rand procedural artwork | Original code-generated materials, props, characters and ambient effects | Project-owned | `src/iso/iso-textures.js`, `src/iso/iso-props.js`, `src/iso/iso-renderer.js`, `src/iso/iso-life.js` |
 | [Phaser](https://github.com/phaserjs/phaser) | Runtime/rendering engine | MIT | Existing npm dependency; scene, input, camera and display list |
 
 No third-party PNG, sprite sheet, texture, model, logo or sound file is vendored by this branch.
+
+The living-hotel pass adds only original runtime-drawn Rand characters,
+housekeeping carts, contextual bubbles, local light pulses and kitchen steam.
+The generated visual direction used during design review is not bundled as a
+game asset and does not introduce an external license dependency.
 
 ## Evaluated CC0 sources
 

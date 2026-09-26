@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { buildIsoHotel } from './iso/iso-renderer.js'
+import { createHotelLife } from './iso/iso-life.js'
 import { gridToScreen, isoDepth, screenToGrid } from './iso/iso-math.js'
 import { areaAt, destinationForZone, mapById, roomById, routeAreas } from './iso/iso-world.js'
 import { areaForIssue } from './living-runtime.js'
@@ -47,7 +48,7 @@ function makeGuest(scene,issue,index,onSelect){
 }
 
 export class LivingWorldScene extends Phaser.Scene{
-  constructor(){super({key:'LivingWorld'});this.agentNodes=new Map();this.clientNodes=new Map();this.hotel=null;this.activeMapId='ground';this.selectedId=null;this.director=true}
+  constructor(){super({key:'LivingWorld'});this.agentNodes=new Map();this.clientNodes=new Map();this.hotel=null;this.hotelLife=null;this.activeMapId='ground';this.selectedId=null;this.director=true}
 
   create(){
     const cb=this.game.config.callbacks||{};this.callbacks=cb;this.onSelect=cb.onSelect;this.onSelectIssue=cb.onSelectIssue
@@ -56,8 +57,9 @@ export class LivingWorldScene extends Phaser.Scene{
   }
 
   buildWorld(mapId){
-    this.hotel?.destroy?.();this.activeMapId=mapById(mapId).id
+    this.hotelLife?.destroy?.();this.hotel?.destroy?.();this.activeMapId=mapById(mapId).id
     this.hotel=buildIsoHotel(this,this.activeMapId,{onElevator:()=>this.callbacks?.onElevator?.(this.activeMapId)})
+    this.hotelLife=createHotelLife(this,this.hotel.map)
     for(const node of this.agentNodes.values())this.syncNodeVisibility(node)
     for(const node of this.clientNodes.values())node.container.setVisible(node.mapId===this.activeMapId)
     this.fitCamera(false);this.callbacks?.onMapChanged?.(this.activeMapId)
@@ -183,7 +185,7 @@ export class LivingWorldScene extends Phaser.Scene{
     }
   }
 
-  update(time,delta){for(const node of this.agentNodes.values())this.stepAgent(node,delta,time);for(const node of this.clientNodes.values())if(node.container.visible)node.glow.setScale(1+Math.sin(time/(260-Math.min(120,node.pulse||0)))*.05)}
+  update(time,delta){this.hotelLife?.update(time,delta);for(const node of this.agentNodes.values())this.stepAgent(node,delta,time);for(const node of this.clientNodes.values())if(node.container.visible)node.glow.setScale(1+Math.sin(time/(260-Math.min(120,node.pulse||0)))*.05)}
 }
 
 export function createLivingWorldGame(parent,callbacks){

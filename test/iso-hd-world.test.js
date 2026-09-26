@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { gridToScreen, screenToGrid, ISO_TILE_W, ISO_TILE_H } from '../src/iso/iso-math.js'
 import { floorTexture } from '../src/iso/iso-textures.js'
 import { propLayoutFor } from '../src/iso/iso-props.js'
+import { ambientLifeFor } from '../src/iso/iso-life.js'
 import { ISO_MAPS, ISO_WORLD, allTiles, destinationForZone, isStepWalkable, roomById, routeAreas, tilesForRoom } from '../src/iso/iso-world.js'
 
 test('isometric projection uses HD 2:1 tiles and round-trips',()=>{
@@ -56,4 +57,22 @@ test('Jazz furniture is modern while Wine uses cellar and arte povera pieces',()
   for(const type of ['jazzBed','jazzWardrobe','jazzDesk','sculpture'])assert.ok(jazzTypes.has(type),type)
   for(const type of ['wineBed','wineWardrobe','wineDesk','barrel','bottleRack'])assert.ok(wineTypes.has(type),type)
   assert.ok(!jazzTypes.has('barrel'));assert.ok(!wineTypes.has('sculpture'))
+})
+
+test('the hotel has ambient life routed through walkable corridors and doors',()=>{
+  for(const map of ISO_MAPS){
+    const population=ambientLifeFor(map)
+    assert.ok(population.length>=(map.kind==='ground'?10:3),`${map.id} population`)
+    for(const actor of population){
+      assert.ok(actor.route.length>=3,`${actor.id} route`)
+      for(let i=1;i<actor.route.length;i++){
+        const path=routeAreas(actor.route[i-1],actor.route[i],map.id)
+        assert.ok(path.length,`${actor.id}: ${actor.route[i-1]} -> ${actor.route[i]}`)
+        for(let step=1;step<path.length;step++){
+          const a={x:Math.floor(path[step-1].x),y:Math.floor(path[step-1].y)},b={x:Math.floor(path[step].x),y:Math.floor(path[step].y)}
+          assert.ok(isStepWalkable(map,a,b),`${actor.id} crosses a wall`)
+        }
+      }
+    }
+  }
 })
