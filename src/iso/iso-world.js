@@ -43,33 +43,65 @@ const GROUND_DOORS=[
   door('gym-gallery','gym','east-gallery',{x:29,y:8},{x:28,y:8},2),
 ]
 
-function guestFloor(id,label,theme,floorNumber,officeCount){
-  const prefix=String(floorNumber)
+function roomNumber(floor,number){return `${floor}${String(number).padStart(2,'0')}`}
+
+// Jazz: unico corridoio, dispari a sinistra e pari a destra. I 76 Jazz Rooms
+// pubblici diventano 19 camere per ciascuno dei quattro piani Jazz.
+function jazzFloor(floorNumber){
   const areas=[
-    area('floor-corridor',`${label.toUpperCase()} · PIANO ${floorNumber}`,theme==='jazz'?'jazzCorridor':'wineCorridor',[rect(4,5,21,3)],{x:14.5,y:6.5},'circulation'),
-    area('elevators','ASCENSORI','elevator',[rect(11,1,4,4)],{x:13,y:3}),
-    area('floor-lounge','LOUNGE DI PIANO',theme==='jazz'?'jazzLounge':'wineLounge',[rect(11,8,4,5)],{x:13,y:10.5}),
+    area('floor-corridor',`JAZZ · PIANO ${floorNumber}`,'jazzCorridor',[rect(6,10,35,3)],{x:23.5,y:11.5},'circulation'),
+    area('service-foyer','PASSAGGIO OFFICE','jazzService',[rect(4,8,2,13)],{x:5,y:14.5},'circulation'),
+    area('elevators','ASCENSORI','elevator',[rect(0,8,4,4)],{x:2,y:10}),
+    area('service-elevator','ASCENSORE SERVICE','elevator',[rect(0,13,4,4)],{x:2,y:15}),
+    area('office-1','OFFICE DI PIANO','jazzService',[rect(0,17,4,4)],{x:2,y:19}),
+    area('floor-lounge','NICCHIA JAZZ','jazzLounge',[rect(36,13,5,5)],{x:38.5,y:15.5}),
   ]
-  const rooms=[
-    [1,1,1,5,4,3,4,3,5],[2,6,1,5,4,8,4,8,5],[3,15,1,5,4,17,4,17,5],[4,20,1,5,4,22,4,22,5],
-    [5,1,8,5,5,3,8,3,7],[6,6,8,5,5,8,8,8,7],[7,15,8,5,5,17,8,17,7],[8,20,8,5,5,22,8,22,7],
+  const doors=[
+    door('lift-foyer','elevators','service-foyer',{x:3,y:10},{x:4,y:10},2),
+    door('service-lift-foyer','service-elevator','service-foyer',{x:3,y:15},{x:4,y:15},2),
+    door('office-foyer','office-1','service-foyer',{x:3,y:19},{x:4,y:19},2),
+    door('foyer-corridor','service-foyer','floor-corridor',{x:5,y:11},{x:6,y:11},2),
+    door('jazz-lounge','floor-lounge','floor-corridor',{x:38,y:13},{x:38,y:12},2),
   ]
-  const doors=[door('lift-floor','elevators','floor-corridor',{x:12,y:4},{x:12,y:5},2),door('lounge-floor','floor-lounge','floor-corridor',{x:12,y:8},{x:12,y:7},2)]
-  for(const [n,x,y,w,h,dx,dy,cx,cy] of rooms){
-    const roomId=`room-${prefix}${String(n).padStart(2,'0')}`
-    areas.push(area(roomId,`CAMERA ${prefix}${String(n).padStart(2,'0')}`,theme,[rect(x,y,w,h)],{x:x+w/2,y:y+h/2}))
-    doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:dx,y:dy},{x:cx,y:cy}))
+  for(let number=1;number<=19;number++){
+    const slot=Math.floor((number-1)/2),odd=number%2===1,x=6+slot*3,y=odd?4:13,roomId=`room-${roomNumber(floorNumber,number)}`
+    areas.push(area(roomId,`CAMERA ${roomNumber(floorNumber,number)}`,'jazz',[rect(x,y,3,odd?6:5)],{x:x+1.5,y:y+(odd?3:2.5)}))
+    doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:x+1,y:odd?9:13},{x:x+1,y:odd?10:12}))
   }
-  for(let i=0;i<officeCount;i++){
-    const x=i?25:0
-    areas.push(area(`office-${i+1}`,`OFFICE ${i+1}`,theme==='jazz'?'jazzService':'wineService',[rect(x,5,4,3)],{x:x+2,y:6.5}))
-    doors.push(door(`office-${i+1}-door`,`office-${i+1}`,'floor-corridor',i?{x:25,y:6}:{x:3,y:6},i?{x:24,y:6}:{x:4,y:6}))
+  return {id:`jazz${floorNumber}`,label:`Jazz · Piano ${floorNumber}`,shortLabel:`Jazz ${floorNumber}`,kind:'guest',theme:'jazz',level:floorNumber,width:42,height:22,areas,doors,elevatorArea:'elevators',elevatorAreas:['elevators','service-elevator'],roomCount:19}
+}
+
+// Wine: camere cantina nella fascia sinistra uscendo dagli ascensori, camere
+// normali nella fascia opposta, due nuclei ascensori e office dopo i blocchi.
+function wineFloor(floorNumber,roomCount){
+  const areas=[
+    area('floor-corridor',`WINE · PIANO ${floorNumber}`,'wineCorridor',[rect(6,14,62,3)],{x:37,y:15.5},'circulation'),
+    area('elevators','ASCENSORI','elevator',[rect(26,9,5,5)],{x:28.5,y:11.5}),
+    area('elevators-15','ASCENSORI · BLOCCO 15','elevator',[rect(56,9,5,5)],{x:58.5,y:11.5}),
+    area('office-1','OFFICE · DOPO CAMERA 15','wineService',[rect(66,9,4,5)],{x:68,y:11.5}),
+    area('office-2','OFFICE · FINE PIANO','wineService',[rect(58,17,4,5)],{x:60,y:19.5}),
+    area('floor-lounge','ANGOLO ENOTECA','wineLounge',[rect(1,17,6,5)],{x:4,y:19.5}),
+  ]
+  const doors=[
+    door('wine-lift-7','elevators','floor-corridor',{x:28,y:13},{x:28,y:14},2),
+    door('wine-lift-15','elevators-15','floor-corridor',{x:58,y:13},{x:58,y:14},2),
+    door('wine-office-15','office-1','floor-corridor',{x:66,y:13},{x:66,y:14},2),
+    door('wine-office-end','office-2','floor-corridor',{x:59,y:17},{x:59,y:16},2),
+    door('wine-lounge','floor-lounge','floor-corridor',{x:6,y:17},{x:6,y:16},2),
+  ]
+  for(let number=1;number<=roomCount;number++){
+    const upper=number<=15,slot=upper?number-1:number-16
+    const upperX=[8,11,14,17,20,23,32,35,38,41,44,47,50,53,62][slot]
+    const x=upper?upperX:(slot===16?63:8+slot*3),y=upper?4:17,cellar=upper&&number<=6
+    const roomId=`room-${roomNumber(floorNumber,number)}`,theme=cellar?'wineCellar':'wine'
+    areas.push(area(roomId,`${cellar?'CANTINA':'CAMERA'} ${roomNumber(floorNumber,number)}`,theme,[rect(x,y,3,upper?10:5)],{x:x+1.5,y:y+(upper?5:2.5)}))
+    doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:x+1,y:upper?13:17},{x:x+1,y:upper?14:16}))
   }
-  return {id,label:`${label} · Piano ${floorNumber}`,shortLabel:`${label} ${floorNumber}`,kind:'guest',theme,level:floorNumber,width:29,height:14,areas,doors,elevatorArea:'elevators'}
+  return {id:`wine${floorNumber}`,label:`Wine · Piano ${floorNumber}`,shortLabel:`Wine ${floorNumber}`,kind:'guest',theme:'wine',level:floorNumber,width:71,height:23,areas,doors,elevatorArea:'elevators',elevatorAreas:['elevators','elevators-15'],roomCount}
 }
 
 const ground={id:'ground',label:'Hotel Giò · Piano Terra',shortLabel:'Piano Terra',kind:'ground',level:0,width:35,height:29,areas:GROUND_AREAS,doors:GROUND_DOORS,elevatorArea:'elevators'}
-const floors=[1,2,3,4].map(n=>guestFloor(`jazz${n}`,'Jazz','jazz',n,1)).concat([5,6,7,8].map(n=>guestFloor(`wine${n}`,'Wine','wine',n,2)))
+const floors=[1,2,3,4].map(jazzFloor).concat([5,6,7,8].map((floor,index)=>wineFloor(floor,index<2?31:32)))
 
 export const ISO_MAPS=Object.freeze([ground,...floors])
 export const ISO_WORLD=ground
@@ -121,7 +153,7 @@ export const tilesForRect=shape=>cellsForArea({...shape,id:'shape',kind:'room',s
 export function doorBetween(mapOrId,a,b){return cacheFor(mapOrId).doors.get(edgeKey(a,b))||null}
 
 const themes={
-  lobby:{floor:'marble',wall:'hotel'},reception:{floor:'marbleDark',wall:'hotel'},bar:{floor:'wood',wall:'wood'},event:{floor:'carpet',wall:'hotel'},restaurant:{floor:'wood',wall:'hotel'},kitchen:{floor:'kitchen',wall:'service'},service:{floor:'service',wall:'service'},serviceCorridor:{floor:'serviceRunner',wall:'service'},technical:{floor:'technical',wall:'service'},warehouse:{floor:'concrete',wall:'service'},spa:{floor:'stone',wall:'spa'},gym:{floor:'rubber',wall:'service'},elevator:{floor:'marbleDark',wall:'hotel'},entrance:{floor:'stone',wall:'hotel'},corridor:{floor:'corridor',wall:'hotel'},jazz:{floor:'jazzCarpet',wall:'jazz'},jazzCorridor:{floor:'jazzCorridor',wall:'jazz'},jazzLounge:{floor:'wood',wall:'jazz'},jazzService:{floor:'service',wall:'service'},wine:{floor:'wineCarpet',wall:'wine'},wineCorridor:{floor:'wineCorridor',wall:'wine'},wineLounge:{floor:'woodDark',wall:'wine'},wineService:{floor:'service',wall:'service'},
+  lobby:{floor:'marble',wall:'hotel'},reception:{floor:'marbleDark',wall:'hotel'},bar:{floor:'wood',wall:'wood'},event:{floor:'carpet',wall:'hotel'},restaurant:{floor:'wood',wall:'hotel'},kitchen:{floor:'kitchen',wall:'service'},service:{floor:'service',wall:'service'},serviceCorridor:{floor:'serviceRunner',wall:'service'},technical:{floor:'technical',wall:'service'},warehouse:{floor:'concrete',wall:'service'},spa:{floor:'stone',wall:'spa'},gym:{floor:'rubber',wall:'service'},elevator:{floor:'marbleDark',wall:'hotel'},entrance:{floor:'stone',wall:'hotel'},corridor:{floor:'corridor',wall:'hotel'},jazz:{floor:'jazzCarpet',wall:'jazz'},jazzCorridor:{floor:'jazzCorridor',wall:'jazz'},jazzLounge:{floor:'wood',wall:'jazz'},jazzService:{floor:'service',wall:'service'},wine:{floor:'wineCarpet',wall:'wine'},wineCellar:{floor:'woodDark',wall:'wine'},wineCorridor:{floor:'wineCorridor',wall:'wine'},wineLounge:{floor:'woodDark',wall:'wine'},wineService:{floor:'service',wall:'service'},
 }
 export const themeFor=a=>themes[a?.theme]||themes.lobby
 

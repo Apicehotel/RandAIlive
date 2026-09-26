@@ -172,13 +172,21 @@ const groundProps=[
 
 function guestProps(map){
   const jazz=map.theme==='jazz'
-  const items=jazz
-    ?[['elevatorDoors',13,2.1],['jazzSofa',12,10],['jazzTable',13.4,11],['plant',14.2,9.1],['sculpture',12.8,12]]
-    :[['elevatorDoors',13,2.1],['wineBench',12,10],['wineTable',13.4,11],['barrel',14.2,9.2],['bottleRack',12.8,12]]
+  const lounge=map.areas.find(area=>area.id==='floor-lounge')
+  const items=(map.elevatorAreas||[map.elevatorArea]).map(id=>{
+    const lift=map.areas.find(area=>area.id===id)
+    return ['elevatorDoors',lift.anchor.x,lift.anchor.y-1.3]
+  })
+  if(lounge){
+    if(jazz)items.push(['jazzSofa',lounge.anchor.x-.8,lounge.anchor.y],['jazzTable',lounge.anchor.x+.6,lounge.anchor.y+.8],['plant',lounge.anchor.x+1.3,lounge.anchor.y-1],['sculpture',lounge.anchor.x-.3,lounge.anchor.y+1.5])
+    else items.push(['wineBench',lounge.anchor.x-.8,lounge.anchor.y],['wineTable',lounge.anchor.x+.6,lounge.anchor.y+.8],['barrel',lounge.anchor.x+1.3,lounge.anchor.y-1],['bottleRack',lounge.anchor.x-.3,lounge.anchor.y+1.5])
+  }
   for(const a of map.areas.filter(v=>v.id.startsWith('room-'))){
+    const cellar=a.theme==='wineCellar'
     items.push([jazz?'jazzBed':'wineBed',a.anchor.x-.6,a.anchor.y+.4])
     items.push([jazz?'jazzWardrobe':'wineWardrobe',a.anchor.x+1.3,a.anchor.y-1])
     items.push([jazz?'jazzDesk':'wineDesk',a.anchor.x-1.4,a.anchor.y-1])
+    if(cellar)items.push(['barrel',a.anchor.x+.2,a.anchor.y+1.2],['bottleRack',a.anchor.x-1.1,a.anchor.y+.6])
   }
   for(const a of map.areas.filter(v=>v.id.startsWith('office-'))){
     if(jazz)items.push(['shelf',a.anchor.x,a.anchor.y-.5],['trolley',a.anchor.x,a.anchor.y+.8])
