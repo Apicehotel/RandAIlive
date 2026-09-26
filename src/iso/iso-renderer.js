@@ -145,8 +145,11 @@ export function buildIsoHotel(scene,mapId='ground',{onElevator}={}){
   }
   nodes.push(...addAmbientPools(scene,map),...drawWalls(scene,map,tiles),...drawDoorways(scene,map),...drawIsoProps(scene,map),...addCeilingLights(scene,map))
   for(const room of map.areas){const label=addRoomLabel(scene,map,room);if(label)nodes.push(label)}
-  const lift=roomById(map.elevatorArea,map.id),lp=gridToScreen(lift.anchor.x,lift.anchor.y)
-  const liftZone=scene.add.zone(lp.x,lp.y-28,170,120).setInteractive({useHandCursor:true}).setDepth(60000+isoDepth(lift.anchor.x,lift.anchor.y))
-  liftZone.on('pointerdown',()=>onElevator?.(map.id));nodes.push(liftZone)
-  return {map,nodes,bounds,liftZone,destroy(){for(const n of nodes)n?.destroy?.()}}
+  const lifts=(map.elevatorAreas||[map.elevatorArea]).map(id=>roomById(id,map.id))
+  const liftZones=lifts.map(lift=>{
+    const lp=gridToScreen(lift.anchor.x,lift.anchor.y)
+    const zone=scene.add.zone(lp.x,lp.y-28,170,120).setInteractive({useHandCursor:true}).setDepth(60000+isoDepth(lift.anchor.x,lift.anchor.y))
+    zone.on('pointerdown',()=>onElevator?.(map.id));nodes.push(zone);return zone
+  })
+  return {map,nodes,bounds,liftZone:liftZones[0],liftZones,destroy(){for(const n of nodes)n?.destroy?.()}}
 }
