@@ -141,7 +141,8 @@ export function isStepWalkable(mapOrId,a,b){
 }
 
 function nearestCell(map,point){
-  const cells=allTiles(map)
+  const cache=cacheFor(map)
+  const cells=allTiles(map).filter(cell=>!cache.blocked.has(cellKey(cell.x,cell.y)))
   return cells.reduce((best,c)=>{
     const d=(c.x+.5-point.x)**2+(c.y+.5-point.y)**2
     return !best||d<best.d?{...c,d}:best

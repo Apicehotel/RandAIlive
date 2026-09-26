@@ -34,6 +34,7 @@ test('phaser world draws branded agents and living clients', () => {
   assert.match(scene, /urgencyAura/)
   assert.match(scene, /problemEmoji/)
   assert.match(scene, /buildIsoHotel/)
+  assert.match(scene, /createHotelLife/)
   assert.match(scene, /routeAreas/)
   assert.match(scene, /setActiveMap/)
   assert.match(scene, /gridToScreen/)

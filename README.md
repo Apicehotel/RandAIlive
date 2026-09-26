@@ -57,6 +57,22 @@ Ogni piano camere ha corridoio, porte numerate, lounge, ascensori e office di pi
 - depth sorting basato su `x + y`, condiviso da agenti, arredi e pareti;
 - pan, zoom con rotellina/pinch e ricentratura con `0`.
 
+## Hotel vivo
+
+Oltre ai Rand e ai clienti derivati dalle segnalazioni, ogni mappa contiene una
+popolazione ambientale dichiaratamente `SIM`. Sul piano terra gli ospiti
+arrivano dall'Ingresso, passano per Hall e Reception e raggiungono Ascensori,
+Bar, Congressi o Ristorante. Receptionist, facchini, camerieri, cucina,
+housekeeping, manutenzione e SPA seguono circuiti coerenti con la loro funzione.
+
+I piani Jazz e Wine hanno flussi propri tra ascensori, corridoio, lounge,
+camere e office. Jazz usa ospiti e attività dal carattere contemporaneo; Wine
+mantiene l'atmosfera cantina/arte povera. Le persone non sono comparse
+teletrasportate: ogni tratto usa lo stesso pathfinding di porte, ostacoli e
+corridoi degli agenti Rand. Il mondo include inoltre pause, passo animato,
+fumetti contestuali intermittenti, carrelli, pulsazioni luminose e vapore della
+cucina. Questi segnali scenici non vengono mai etichettati `LIVE`.
+
 ## Materiali e arredi
 
 Le texture attive sono artwork procedurale originale Rand e includono marmo, marmo scuro, parquet, moquette eventi, moquette Jazz/Wine, pietra SPA, gomma palestra, piastrelle cucina, cemento, service e corridoi con runner.
@@ -92,6 +108,7 @@ Le azioni di gioco modificano il progresso locale. Le operazioni sulle segnalazi
 - `src/iso/iso-math.js`: proiezione e profondità;
 - `src/iso/iso-textures.js`: materiali procedurali ripetibili;
 - `src/iso/iso-props.js`: catalogo e layout arredi;
+- `src/iso/iso-life.js`: ospiti, personale, routine ambientali ed effetti vivi;
 - `src/iso/iso-renderer.js`: pavimenti, pareti, varchi, luce e composizione;
 - `src/living-runtime.js`: confine LIVE/SIM e instradamento dei ticket;
 - `src/behavior-engine.js`: vita simulata degli agenti;
@@ -108,7 +125,7 @@ npm run dev
 npm run verify
 ```
 
-`npm run verify` esegue l’intera suite Node e la build Vite production. I test coprono proiezione, nove mappe, raggiungibilità di ogni area, assenza di salti nel percorso, attraversamento porte, contratti LIVE/SIM, quest, autenticazione, bootstrap e deploy.
+`npm run verify` esegue l’intera suite Node e la build Vite production. I test coprono proiezione, nove mappe, raggiungibilità di ogni area, assenza di salti nel percorso, attraversamento porte, popolazione ambientale, contratti LIVE/SIM, quest, autenticazione, bootstrap e deploy.
 
 Test locale equivalente a Ocean:
 
