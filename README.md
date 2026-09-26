@@ -35,18 +35,18 @@ Le porte sono aperture del modello: il renderer rimuove il segmento di muro corr
 Il gioco contiene nove mappe:
 
 1. Piano Terra;
-2. Jazz 1;
-3. Jazz 2;
-4. Jazz 3;
-5. Jazz 4;
-6. Wine 5;
-7. Wine 6;
-8. Wine 7;
-9. Wine 8.
+2. Primo Wine;
+3. Secondo Wine;
+4. Terzo Wine;
+5. Quarto Wine;
+6. Primo Jazz;
+7. Secondo Jazz;
+8. Terzo Jazz;
+9. Quarto Jazz.
 
-Ogni piano camere ha corridoio, porte numerate, ascensori e office di piano. I quattro piani Jazz riproducono un unico corridoio da 19 camere: dispari su un lato, pari sull'altro, due ascensori ospiti più ascensore service e office adiacente. In totale sono 76 camere Jazz.
+Ogni piano camere ha corridoio, porte numerate, ascensori e office di piano. La numerazione deriva dall'export operativo housekeeping dell'8 agosto 2026: i quattro piani Jazz hanno 19 camere ciascuno (1101–1121, 2201–2221, 3301–3321 e 4401–4421, con le lacune reali), dispari su un lato e pari sull'altro, due ascensori ospiti più ascensore service e office adiacente. In totale sono 76 camere Jazz.
 
-I quattro piani Wine riproducono il corridoio lungo e asimmetrico: sei camere cantina nel lato d'uscita ascensori, due nuclei ascensori presso i blocchi 7 e 15, office dopo il primo blocco e office di fine piano. Sono 126 camere Wine, distribuite provvisoriamente 31/31/32/32 finché la numerazione reale di ciascun piano non viene confermata. Il selettore si apre dal controllo Ascensori e cliccando ciascun nucleo ascensori nella scena.
+I quattro piani Wine riproducono il corridoio lungo e asimmetrico: camere standard sul lato destro, camere Cantina nel lato d'uscita ascensori, due nuclei ascensori presso i blocchi 7 e 15, office dopo il primo blocco e office di fine piano. Sono 126 camere Wine reali: 30 al Primo, 32 al Secondo, 31 al Terzo e 33 al Quarto. Il selettore si apre dal controllo Ascensori e cliccando ciascun nucleo ascensori nella scena.
 
 ## Movimento e collisioni
 

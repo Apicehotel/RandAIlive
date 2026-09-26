@@ -1,14 +1,12 @@
+import { mapForRoomNumber } from './iso/iso-world.js'
+
 const TECHNICAL_HINTS = ['clima','condizion','elettr','luce','acqua','scarico','wc','bagno','porta','serratura','tv','televis','frigo','cassaforte','guasto','manuten']
 
 function textOf(value){ return String(value ?? '').trim().toLowerCase() }
 
 export function areaForIssue(issue = {}) {
-  const room = textOf(issue.camera)
-  const match = room.match(/(?:^|\D)([1-8])\d{2}(?:\D|$)/)
-  if (match) {
-    const floor = Number(match[1])
-    return floor <= 4 ? `jazz${floor}` : `wine${floor}`
-  }
+  const roomMap=mapForRoomNumber(issue.camera)
+  if(roomMap)return roomMap.id
 
   const haystack = [issue.categoria, issue.note].map(textOf).join(' ')
   if (TECHNICAL_HINTS.some(hint => haystack.includes(hint))) return 'technical'

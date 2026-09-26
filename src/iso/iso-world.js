@@ -43,13 +43,25 @@ const GROUND_DOORS=[
   door('gym-gallery','gym','east-gallery',{x:29,y:8},{x:28,y:8},2),
 ]
 
-function roomNumber(floor,number){return `${floor}${String(number).padStart(2,'0')}`}
+// Inventario camere estratto dal file operativo housekeeping del 08/08/2026.
+// I numeri non sono progressivi: le lacune sono numeri reali non assegnati a
+// camere e quindi non devono diventare porte o destinazioni nel gioco.
+const GUEST_FLOORS=Object.freeze({
+  wine1:{label:'Primo Wine',rooms:[101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,119,120,121,122,123,124,125,126,127,128,129,130,131],cellars:[111,112,126,127,128,129,130,131]},
+  wine2:{label:'Secondo Wine',rooms:[201,202,203,204,205,206,207,208,209,210,211,212,213,214,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233],cellars:[225,226,227,228,229,230,231,232,233]},
+  wine3:{label:'Terzo Wine',rooms:[301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332],cellars:[324,325,326,327,328,329,330,331,332]},
+  wine4:{label:'Quarto Wine',rooms:[401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434],cellars:[426,427,428,429,430,431,432,433,434]},
+  jazz1:{label:'Primo Jazz',rooms:[1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111,1112,1114,1115,1116,1118,1119,1120,1121]},
+  jazz2:{label:'Secondo Jazz',rooms:[2201,2202,2203,2204,2205,2206,2207,2208,2209,2210,2211,2212,2214,2215,2216,2218,2219,2220,2221]},
+  jazz3:{label:'Terzo Jazz',rooms:[3301,3302,3303,3304,3305,3306,3307,3308,3309,3310,3311,3312,3314,3315,3316,3318,3319,3320,3321]},
+  jazz4:{label:'Quarto Jazz',rooms:[4401,4402,4403,4404,4405,4406,4407,4408,4409,4410,4411,4412,4414,4415,4416,4418,4419,4420,4421]},
+})
 
-// Jazz: unico corridoio, dispari a sinistra e pari a destra. I 76 Jazz Rooms
-// pubblici diventano 19 camere per ciascuno dei quattro piani Jazz.
-function jazzFloor(floorNumber){
+// Jazz: unico corridoio, dispari a sinistra e pari a destra.
+function jazzFloor(id,floor){
+  const inventory=GUEST_FLOORS[id]
   const areas=[
-    area('floor-corridor',`JAZZ · PIANO ${floorNumber}`,'jazzCorridor',[rect(6,10,35,3)],{x:23.5,y:11.5},'circulation'),
+    area('floor-corridor',`JAZZ · ${inventory.label}`,'jazzCorridor',[rect(6,10,35,3)],{x:23.5,y:11.5},'circulation'),
     area('service-foyer','PASSAGGIO OFFICE','jazzService',[rect(4,8,2,13)],{x:5,y:14.5},'circulation'),
     area('elevators','ASCENSORI','elevator',[rect(0,8,4,4)],{x:2,y:10}),
     area('service-elevator','ASCENSORE SERVICE','elevator',[rect(0,13,4,4)],{x:2,y:15}),
@@ -63,49 +75,60 @@ function jazzFloor(floorNumber){
     door('foyer-corridor','service-foyer','floor-corridor',{x:5,y:11},{x:6,y:11},2),
     door('jazz-lounge','floor-lounge','floor-corridor',{x:38,y:13},{x:38,y:12},2),
   ]
-  for(let number=1;number<=19;number++){
-    const slot=Math.floor((number-1)/2),odd=number%2===1,x=6+slot*3,y=odd?4:13,roomId=`room-${roomNumber(floorNumber,number)}`
-    areas.push(area(roomId,`CAMERA ${roomNumber(floorNumber,number)}`,'jazz',[rect(x,y,3,odd?6:5)],{x:x+1.5,y:y+(odd?3:2.5)}))
+  let oddSlot=0,evenSlot=0
+  inventory.rooms.forEach(number=>{
+    const odd=number%2===1,slot=odd?oddSlot++:evenSlot++,x=6+slot*3,y=odd?4:13,roomId=`room-${number}`
+    areas.push(area(roomId,`CAMERA ${number}`,'jazz',[rect(x,y,3,odd?6:5)],{x:x+1.5,y:y+(odd?3:2.5)}))
     doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:x+1,y:odd?9:13},{x:x+1,y:odd?10:12}))
-  }
-  return {id:`jazz${floorNumber}`,label:`Jazz · Piano ${floorNumber}`,shortLabel:`Jazz ${floorNumber}`,kind:'guest',theme:'jazz',level:floorNumber,width:42,height:22,areas,doors,elevatorArea:'elevators',elevatorAreas:['elevators','service-elevator'],roomCount:19}
+  })
+  return {id,label:`Jazz · ${inventory.label}`,shortLabel:inventory.label,kind:'guest',theme:'jazz',level:Number(id.slice(-1)),width:42,height:22,areas,doors,elevatorArea:'elevators',elevatorAreas:['elevators','service-elevator'],roomCount:inventory.rooms.length}
 }
 
 // Wine: camere cantina nella fascia sinistra uscendo dagli ascensori, camere
 // normali nella fascia opposta, due nuclei ascensori e office dopo i blocchi.
-function wineFloor(floorNumber,roomCount){
+function wineFloor(id){
+  const inventory=GUEST_FLOORS[id],cellars=new Set(inventory.cellars)
   const areas=[
-    area('floor-corridor',`WINE · PIANO ${floorNumber}`,'wineCorridor',[rect(6,14,62,3)],{x:37,y:15.5},'circulation'),
+    area('floor-corridor',`WINE · ${inventory.label}`,'wineCorridor',[rect(6,14,82,3)],{x:47,y:15.5},'circulation'),
     area('elevators','ASCENSORI','elevator',[rect(26,9,5,5)],{x:28.5,y:11.5}),
     area('elevators-15','ASCENSORI · BLOCCO 15','elevator',[rect(56,9,5,5)],{x:58.5,y:11.5}),
-    area('office-1','OFFICE · DOPO CAMERA 15','wineService',[rect(66,9,4,5)],{x:68,y:11.5}),
-    area('office-2','OFFICE · FINE PIANO','wineService',[rect(58,17,4,5)],{x:60,y:19.5}),
+    area('office-1','OFFICE · DOPO BLOCCO 15','wineService',[rect(66,9,4,5)],{x:68,y:11.5}),
+    area('office-2','OFFICE · FINE PIANO','wineService',[rect(86,17,4,5)],{x:88,y:19.5}),
     area('floor-lounge','ANGOLO ENOTECA','wineLounge',[rect(1,17,6,5)],{x:4,y:19.5}),
   ]
   const doors=[
     door('wine-lift-7','elevators','floor-corridor',{x:28,y:13},{x:28,y:14},2),
     door('wine-lift-15','elevators-15','floor-corridor',{x:58,y:13},{x:58,y:14},2),
     door('wine-office-15','office-1','floor-corridor',{x:66,y:13},{x:66,y:14},2),
-    door('wine-office-end','office-2','floor-corridor',{x:59,y:17},{x:59,y:16},2),
+    door('wine-office-end','office-2','floor-corridor',{x:87,y:17},{x:87,y:16},2),
     door('wine-lounge','floor-lounge','floor-corridor',{x:6,y:17},{x:6,y:16},2),
   ]
-  for(let number=1;number<=roomCount;number++){
-    const upper=number<=15,slot=upper?number-1:number-16
-    const upperX=[8,11,14,17,20,23,32,35,38,41,44,47,50,53,62][slot]
-    const x=upper?upperX:(slot===16?63:8+slot*3),y=upper?4:17,cellar=upper&&number<=6
-    const roomId=`room-${roomNumber(floorNumber,number)}`,theme=cellar?'wineCellar':'wine'
-    areas.push(area(roomId,`${cellar?'CANTINA':'CAMERA'} ${roomNumber(floorNumber,number)}`,theme,[rect(x,y,3,upper?10:5)],{x:x+1.5,y:y+(upper?5:2.5)}))
-    doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:x+1,y:upper?13:17},{x:x+1,y:upper?14:16}))
+  let standardIndex=0,cellarIndex=0
+  for(const number of inventory.rooms){
+    const cellar=cellars.has(number),slot=cellar?cellarIndex++:standardIndex++
+    const upperX=[8,11,14,17,20,23,32,35,38,41][slot]
+    const x=cellar?upperX:8+slot*3,y=cellar?4:17,roomId=`room-${number}`,theme=cellar?'wineCellar':'wine'
+    areas.push(area(roomId,`${cellar?'CANTINA':'CAMERA'} ${number}`,theme,[rect(x,y,3,cellar?10:5)],{x:x+1.5,y:y+(cellar?5:2.5)}))
+    doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:x+1,y:cellar?13:17},{x:x+1,y:cellar?14:16}))
   }
-  return {id:`wine${floorNumber}`,label:`Wine · Piano ${floorNumber}`,shortLabel:`Wine ${floorNumber}`,kind:'guest',theme:'wine',level:floorNumber,width:71,height:23,areas,doors,elevatorArea:'elevators',elevatorAreas:['elevators','elevators-15'],roomCount}
+  return {id,label:`Wine · ${inventory.label}`,shortLabel:inventory.label,kind:'guest',theme:'wine',level:Number(id.slice(-1)),width:92,height:23,areas,doors,elevatorArea:'elevators',elevatorAreas:['elevators','elevators-15'],roomCount:inventory.rooms.length}
 }
 
 const ground={id:'ground',label:'Hotel Giò · Piano Terra',shortLabel:'Piano Terra',kind:'ground',level:0,width:35,height:29,areas:GROUND_AREAS,doors:GROUND_DOORS,elevatorArea:'elevators'}
-const floors=[1,2,3,4].map(jazzFloor).concat([5,6,7,8].map((floor,index)=>wineFloor(floor,index<2?31:32)))
+const floors=['jazz1','jazz2','jazz3','jazz4'].map(id=>jazzFloor(id)).concat(['wine1','wine2','wine3','wine4'].map(id=>wineFloor(id)))
 
 export const ISO_MAPS=Object.freeze([ground,...floors])
 export const ISO_WORLD=ground
 export const DEFAULT_MAP_ID='ground'
+
+export function roomNumberFromValue(value){
+  return String(value??'').match(/(?:^|\D)(\d{3,4})(?:\D|$)/)?.[1]||null
+}
+
+export function mapForRoomNumber(value){
+  const room=roomNumberFromValue(value)
+  return room?ISO_MAPS.find(map=>map.areas.some(area=>area.id===`room-${room}`))||null:null
+}
 
 const cellKey=(x,y)=>`${x},${y}`
 const edgeKey=(a,b)=>[cellKey(a.x,a.y),cellKey(b.x,b.y)].sort().join('|')
@@ -208,7 +231,7 @@ export function routeAreas(fromId,toId,mapId=DEFAULT_MAP_ID){
 export const routeZones=(fromId,toId)=>routeAreas(fromId,toId,DEFAULT_MAP_ID)
 
 export function destinationForZone(zone){
-  if(/^jazz[1-4]$/.test(zone)||/^wine[5-8]$/.test(zone))return {mapId:zone,areaId:'floor-lounge'}
+  if(/^(jazz|wine)[1-4]$/.test(zone)&&mapById(zone).id===zone)return {mapId:zone,areaId:'floor-lounge'}
   if(zone==='hub'||zone==='randhub')return {mapId:'ground',areaId:'lobby'}
   if(zone==='exterior')return {mapId:'ground',areaId:'entrance'}
   if(zone==='ironing'||zone==='laundry'||zone==='staff')return {mapId:'ground',areaId:'service'}

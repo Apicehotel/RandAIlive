@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { buildIsoHotel } from './iso/iso-renderer.js'
 import { createHotelLife } from './iso/iso-life.js'
 import { gridToScreen, isoDepth, screenToGrid } from './iso/iso-math.js'
-import { areaAt, destinationForZone, mapById, roomById, routeAreas } from './iso/iso-world.js'
+import { areaAt, destinationForZone, mapById, mapForRoomNumber, roomById, roomNumberFromValue, routeAreas } from './iso/iso-world.js'
 import { areaForIssue } from './living-runtime.js'
 import { AGENT_LOOKS, problemEmoji, urgencyAura } from './pixel-sprites.js'
 
@@ -28,8 +28,8 @@ function makeIsoAgent(scene,agent,onSelect){
 
 function issueDestination(issue){
   const destination=destinationForZone(areaForIssue(issue))
-  const room=String(issue.camera||'').match(/([1-8]\d{2})/i)?.[1]
-  if(room&&mapById(destination.mapId).areas.some(a=>a.id===`room-${room}`))destination.areaId=`room-${room}`
+  const room=roomNumberFromValue(issue.camera),roomMap=mapForRoomNumber(issue.camera)
+  if(room&&roomMap?.id===destination.mapId)destination.areaId=`room-${room}`
   return destination
 }
 

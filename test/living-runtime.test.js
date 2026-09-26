@@ -3,19 +3,19 @@ import assert from 'node:assert/strict'
 import { areaForIssue, linkedIssueFor, liveDirectiveFor, runtimeEventFeed } from '../src/living-runtime.js'
 
 test('maps hotel room numbers to the canonical playable floor', () => {
-  assert.equal(areaForIssue({camera:'312'}),'jazz3')
-  assert.equal(areaForIssue({camera:'704'}),'wine7')
+  assert.equal(areaForIssue({camera:'312'}),'wine3')
+  assert.equal(areaForIssue({camera:'3302'}),'jazz3')
   assert.equal(areaForIssue({camera:'',categoria:'Aria condizionata'}),'technical')
 })
 
 test('binds a running agent to its real maintenance task', () => {
-  const issue={id:42,camera:'612',categoria:'Climatizzazione'}
+  const issue={id:42,camera:'312',categoria:'Climatizzazione'}
   const agent={id:'randops',name:'RandOps',status:'RUNNING',task_id:'42'}
   assert.equal(linkedIssueFor(agent,[issue]),issue)
   assert.deepEqual(liveDirectiveFor(agent,[issue]),{
     source:'LIVE',
-    zone:'wine6',
-    action:'Intervento · 612: Climatizzazione',
+    zone:'wine3',
+    action:'Intervento · 312: Climatizzazione',
     taskId:'42',
     issueId:42,
   })
