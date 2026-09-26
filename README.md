@@ -130,6 +130,12 @@ configurata con `deploy_on_push: false`. Il deploy resta manuale, non modifica
 `main`, non usa il servizio Docker a pagamento e parte in modalità SIM se le
 variabili pubbliche Supabase non vengono aggiunte esplicitamente alla preview.
 
+[![Crea preview su DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/Apicehotel/RandAIlive/tree/feat/iso-hotel-game-v2)
+
+Il pulsante usa `.do/deploy.template.yaml` e crea soltanto il sito statico della
+feature branch; prima della conferma DigitalOcean mostra sempre configurazione
+e prezzo applicabile all'account.
+
 ## Licenze e identità
 
 Phaser è usato secondo licenza MIT. La grafica attiva è generata dal codice Rand. Kenney e Quaternius sono stati valutati come sorgenti CC0 per un’eventuale futura pipeline atlas, ma nessun loro file binario è incorporato in questa revisione. StarNet è solo un riferimento di densità e atmosfera: identità, artwork, logo e sprite non vengono copiati.

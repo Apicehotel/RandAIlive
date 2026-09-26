@@ -1,0 +1,18 @@
+spec:
+  name: randailive-preview
+  region: fra
+  static_sites:
+    - name: randailive-preview
+      environment_slug: node-js
+      git:
+        repo_clone_url: https://github.com/Apicehotel/RandAIlive.git
+        branch: feat/iso-hotel-game-v2
+      build_command: npm ci && npm run build
+      output_dir: dist
+      index_document: index.html
+      catchall_document: index.html
+      envs:
+        - key: VITE_RANDAILIVE_HOTEL_ID
+          scope: BUILD_TIME
+          type: GENERAL
+          value: hotelgio
