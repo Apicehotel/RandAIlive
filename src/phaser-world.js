@@ -1,7 +1,7 @@
 import Phaser from 'phaser'
 import { buildIsoHotel } from './iso/iso-renderer.js'
-import { gridToScreen, isoDepth } from './iso/iso-math.js'
-import { destinationForZone, mapById, roomById, routeAreas } from './iso/iso-world.js'
+import { gridToScreen, isoDepth, screenToGrid } from './iso/iso-math.js'
+import { areaAt, destinationForZone, mapById, roomById, routeAreas } from './iso/iso-world.js'
 import { areaForIssue } from './living-runtime.js'
 import { AGENT_LOOKS, problemEmoji, urgencyAura } from './pixel-sprites.js'
 
@@ -82,21 +82,35 @@ export class LivingWorldScene extends Phaser.Scene{
   }
 
   bindCamera(){
-    const cam=this.cameras.main;let dragging=false,last=null,pinchDistance=null
-    this.input.on('pointerdown',p=>{if(p.button===0){dragging=true;last={x:p.x,y:p.y}}})
+    const cam=this.cameras.main;let dragging=false,last=null,pinchDistance=null,dragDistance=0,pinched=false
+    const zoomAt=(zoom,x,y)=>{
+      const before=cam.getWorldPoint(x,y);cam.setZoom(Phaser.Math.Clamp(zoom,.2,1.25));const after=cam.getWorldPoint(x,y)
+      cam.scrollX+=before.x-after.x;cam.scrollY+=before.y-after.y
+    }
+    const focusRoom=p=>{
+      if(this.hotel.map.kind!=='guest')return
+      const world=cam.getWorldPoint(p.x,p.y),grid=screenToGrid(world.x,world.y),room=areaAt(this.hotel.map,grid.gx,grid.gy)
+      if(!room?.id.startsWith('room-'))return
+      const targetZoom=Math.max(cam.zoom,this.scale.width<760?.62:.82)
+      const target=gridToScreen(room.anchor.x,room.anchor.y)
+      cam.setZoom(targetZoom);cam.pan(target.x,target.y,300,'Sine.easeInOut')
+    }
+    this.input.on('pointerdown',p=>{if(p.button===0){dragging=true;last={x:p.x,y:p.y};dragDistance=0;pinched=false}})
     this.input.on('pointermove',p=>{
       const pointers=this.input.manager.pointers.filter(pointer=>pointer.isDown)
       if(pointers.length>=2){
         const d=Phaser.Math.Distance.Between(pointers[0].x,pointers[0].y,pointers[1].x,pointers[1].y)
-        if(pinchDistance)cam.setZoom(Phaser.Math.Clamp(cam.zoom+(d-pinchDistance)*.002,.2,1.25))
-        pinchDistance=d;return
+        const mx=(pointers[0].x+pointers[1].x)/2,my=(pointers[0].y+pointers[1].y)/2
+        if(pinchDistance)zoomAt(cam.zoom+(d-pinchDistance)*.002,mx,my)
+        pinchDistance=d;pinched=true;return
       }
       pinchDistance=null
       if(!dragging||!last||!p.isDown)return
-      cam.scrollX-=(p.x-last.x)/cam.zoom;cam.scrollY-=(p.y-last.y)/cam.zoom;last={x:p.x,y:p.y}
+      const dx=p.x-last.x,dy=p.y-last.y;dragDistance+=Math.hypot(dx,dy)
+      cam.scrollX-=dx/cam.zoom;cam.scrollY-=dy/cam.zoom;last={x:p.x,y:p.y}
     })
-    this.input.on('pointerup',()=>{dragging=false;last=null;pinchDistance=null})
-    this.input.on('wheel',(_p,_o,_dx,dy)=>cam.setZoom(Phaser.Math.Clamp(cam.zoom-dy*.001,.2,1.25)))
+    this.input.on('pointerup',p=>{if(dragDistance<7&&!pinched)focusRoom(p);dragging=false;last=null;pinchDistance=null})
+    this.input.on('wheel',(p,_o,_dx,dy)=>zoomAt(cam.zoom-dy*.001,p.x,p.y))
     this.scale.on('resize',()=>this.fitCamera(false));this.input.keyboard?.on('keydown-ZERO',()=>this.fitCamera(true))
   }
 
