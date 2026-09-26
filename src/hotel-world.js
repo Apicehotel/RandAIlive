@@ -9,14 +9,14 @@ export const HOTEL_AREAS = Object.freeze({
   hub: { id: 'hub', label: 'RandApp Hub', floor: 0, type: 'ai', x: 50, y: 49 },
   spa: { id: 'spa', label: 'Spa & Wellness', floor: 0, type: 'wellness', x: 74, y: 72 },
   gym: { id: 'gym', label: 'Palestra', floor: 0, type: 'wellness', x: 88, y: 72 },
-  jazz1: { id: 'jazz1', label: 'Jazz · Piano 1', floor: 1, type: 'rooms', x: 18, y: 30 },
-  jazz2: { id: 'jazz2', label: 'Jazz · Piano 2', floor: 2, type: 'rooms', x: 38, y: 30 },
-  jazz3: { id: 'jazz3', label: 'Jazz · Piano 3', floor: 3, type: 'rooms', x: 58, y: 30 },
-  jazz4: { id: 'jazz4', label: 'Jazz · Piano 4', floor: 4, type: 'rooms', x: 78, y: 30 },
-  wine5: { id: 'wine5', label: 'Wine · Piano 5', floor: 5, type: 'rooms', x: 18, y: 62 },
-  wine6: { id: 'wine6', label: 'Wine · Piano 6', floor: 6, type: 'rooms', x: 38, y: 62 },
-  wine7: { id: 'wine7', label: 'Wine · Piano 7', floor: 7, type: 'rooms', x: 58, y: 62 },
-  wine8: { id: 'wine8', label: 'Wine · Piano 8', floor: 8, type: 'rooms', x: 78, y: 62 },
+  wine1: { id: 'wine1', label: 'Wine · Primo piano', floor: 1, type: 'rooms', x: 18, y: 30 },
+  wine2: { id: 'wine2', label: 'Wine · Secondo piano', floor: 2, type: 'rooms', x: 38, y: 30 },
+  wine3: { id: 'wine3', label: 'Wine · Terzo piano', floor: 3, type: 'rooms', x: 58, y: 30 },
+  wine4: { id: 'wine4', label: 'Wine · Quarto piano', floor: 4, type: 'rooms', x: 78, y: 30 },
+  jazz1: { id: 'jazz1', label: 'Jazz · Primo piano', floor: 11, type: 'rooms', x: 18, y: 62 },
+  jazz2: { id: 'jazz2', label: 'Jazz · Secondo piano', floor: 22, type: 'rooms', x: 38, y: 62 },
+  jazz3: { id: 'jazz3', label: 'Jazz · Terzo piano', floor: 33, type: 'rooms', x: 58, y: 62 },
+  jazz4: { id: 'jazz4', label: 'Jazz · Quarto piano', floor: 44, type: 'rooms', x: 78, y: 62 },
   laundry: { id: 'laundry', label: 'Lavanderia', floor: -1, type: 'service', x: 18, y: 82 },
   ironing: { id: 'ironing', label: 'Stireria', floor: -1, type: 'service', x: 34, y: 82 },
   warehouse: { id: 'warehouse', label: 'Magazzino', floor: -1, type: 'service', x: 50, y: 82 },
@@ -28,7 +28,7 @@ export const HOTEL_AREAS = Object.freeze({
 export const FLOOR_GROUPS = Object.freeze([
   { id: 'ground', label: 'Piano Terra', areas: ['lobby','reception','bar','breakfast','kitchen','congress','meeting','hub','spa','gym','exterior'] },
   { id: 'jazz', label: 'Jazz', areas: ['jazz1','jazz2','jazz3','jazz4'] },
-  { id: 'wine', label: 'Wine', areas: ['wine5','wine6','wine7','wine8'] },
+  { id: 'wine', label: 'Wine', areas: ['wine1','wine2','wine3','wine4'] },
   { id: 'service', label: 'Servizi', areas: ['laundry','ironing','warehouse','technical','staff'] },
 ])
 
@@ -44,7 +44,7 @@ export const HOTEL_EVENTS = Object.freeze([
   { id: 'breakfast-rush', label: 'Rush colazione', area: 'breakfast', pressure: 2, icon: '☕' },
   { id: 'meeting-change', label: 'Cambio sala', area: 'meeting', pressure: 3, icon: '🎤' },
   { id: 'room-turnover', label: 'Riassetto camere', area: 'jazz2', pressure: 2, icon: '🛏️' },
-  { id: 'wine-supply', label: 'Rifornimento Wine', area: 'wine6', pressure: 2, icon: '🧺' },
+  { id: 'wine-supply', label: 'Rifornimento Wine', area: 'wine2', pressure: 2, icon: '🧺' },
   { id: 'technical-alert', label: 'Allarme tecnico', area: 'technical', pressure: 4, icon: '🔧' },
 ])
 
@@ -65,12 +65,12 @@ export const AGENT_ROUTES = Object.freeze({
   randai: ['reception','lobby','bar','meeting','hub'],
   randbrain: ['meeting','congress','bar','hub','jazz1'],
   randcore: ['hub','reception','technical','lobby','warehouse'],
-  randmind: ['warehouse','jazz2','wine6','meeting','bar'],
+  randmind: ['warehouse','jazz2','wine2','meeting','bar'],
   randradar: ['exterior','lobby','reception','technical','bar'],
   randresearch: ['congress','meeting','breakfast','jazz3','hub'],
   randsecure: ['lobby','exterior','reception','technical','hub'],
-  randtest: ['technical','jazz4','wine8','meeting','hub'],
-  randops: ['technical','warehouse','laundry','wine5','hub'],
+  randtest: ['technical','jazz4','wine4','meeting','hub'],
+  randops: ['technical','warehouse','laundry','wine1','hub'],
   randui: ['bar','lobby','spa','meeting','hub'],
 })
 

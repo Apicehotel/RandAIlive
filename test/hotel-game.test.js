@@ -7,7 +7,7 @@ test('Hotel Gio world includes the operational areas and all eight guest floors'
   for(const id of ['reception','bar','breakfast','kitchen','congress','meeting','spa','gym','laundry','warehouse','technical','exterior']){
     assert.ok(HOTEL_AREAS[id], id)
   }
-  for(const id of ['jazz1','jazz2','jazz3','jazz4','wine5','wine6','wine7','wine8']){
+  for(const id of ['jazz1','jazz2','jazz3','jazz4','wine1','wine2','wine3','wine4']){
     assert.ok(HOTEL_AREAS[id], id)
   }
 })

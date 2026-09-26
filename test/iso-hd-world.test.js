@@ -44,7 +44,7 @@ test('all areas route to elevators on walkable orthogonal cells',()=>{
 })
 
 test('Jazz and Wine are eight separate elevator maps',()=>{
-  assert.deepEqual(ISO_MAPS.map(map=>map.id),['ground','jazz1','jazz2','jazz3','jazz4','wine5','wine6','wine7','wine8'])
+  assert.deepEqual(ISO_MAPS.map(map=>map.id),['ground','jazz1','jazz2','jazz3','jazz4','wine1','wine2','wine3','wine4'])
   for(const id of ISO_MAPS.slice(1).map(map=>map.id)){
     assert.deepEqual(destinationForZone(id),{mapId:id,areaId:'floor-lounge'})
     assert.equal(roomById('elevators',id).label,'ASCENSORI')
@@ -55,26 +55,27 @@ test('guest floors follow the Jazz and Wine hotel circulation identities',()=>{
   const jazz=ISO_MAPS.filter(map=>map.theme==='jazz'),wine=ISO_MAPS.filter(map=>map.theme==='wine')
   assert.equal(jazz.reduce((total,map)=>total+map.roomCount,0),76)
   assert.equal(wine.reduce((total,map)=>total+map.roomCount,0),126)
+  assert.deepEqual(wine.map(map=>map.roomCount),[30,32,31,33])
   for(const map of jazz){
     assert.equal(map.roomCount,19)
     assert.deepEqual(map.elevatorAreas,['elevators','service-elevator'])
     assert.ok(map.areas.some(area=>area.id==='office-1'))
     for(const room of map.areas.filter(area=>area.id.startsWith('room-'))){
-      const number=Number(room.id.slice(-2))
+      const number=Number(room.id.slice(5))
       assert.ok(number%2===1?room.anchor.y<10:room.anchor.y>12,`${map.id}:${room.id} parity side`)
     }
   }
-  for(const map of wine){
+  for(const [index,map] of wine.entries()){
     assert.equal(map.elevatorAreas.length,2)
     assert.ok(map.areas.some(area=>area.id==='office-1'))
     assert.ok(map.areas.some(area=>area.id==='office-2'))
-    assert.equal(map.areas.filter(area=>area.theme==='wineCellar').length,6)
+    assert.equal(map.areas.filter(area=>area.theme==='wineCellar').length,[8,9,9,9][index])
   }
 })
 
 test('Jazz furniture is modern while Wine uses cellar and arte povera pieces',()=>{
   const jazzTypes=new Set(propLayoutFor(ISO_MAPS.find(map=>map.id==='jazz1')).map(([type])=>type))
-  const wineTypes=new Set(propLayoutFor(ISO_MAPS.find(map=>map.id==='wine5')).map(([type])=>type))
+  const wineTypes=new Set(propLayoutFor(ISO_MAPS.find(map=>map.id==='wine1')).map(([type])=>type))
   for(const type of ['jazzBed','jazzWardrobe','jazzDesk','sculpture'])assert.ok(jazzTypes.has(type),type)
   for(const type of ['wineBed','wineWardrobe','wineDesk','barrel','bottleRack'])assert.ok(wineTypes.has(type),type)
   assert.ok(!jazzTypes.has('barrel'));assert.ok(!wineTypes.has('sculpture'))
