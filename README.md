@@ -118,13 +118,17 @@ npm run ocean:up
 npm run ocean:down
 ```
 
-Verifica di uno staging DigitalOcean:
+Verifica della preview DigitalOcean:
 
 ```bash
 RANDAILIVE_LIVE_URL=https://TUO-APP.ondigitalocean.app npm run verify:live
 ```
 
-La spec `.do/app.yaml` mantiene `deploy_on_push: false`; il deploy è manuale e non parte da questo workflow di sviluppo.
+La spec `.do/app.yaml` descrive una App Platform **statica** chiamata
+`randailive-preview`, collegata esclusivamente a `feat/iso-hotel-game-v2` e
+configurata con `deploy_on_push: false`. Il deploy resta manuale, non modifica
+`main`, non usa il servizio Docker a pagamento e parte in modalità SIM se le
+variabili pubbliche Supabase non vengono aggiunte esplicitamente alla preview.
 
 ## Licenze e identità
 
