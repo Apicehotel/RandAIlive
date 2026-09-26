@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { RANDAILIVE_HOTEL_ID, supabase } from './supabase.js'
 
-function npcPosition(issue,index){
-  const state=String(issue.stato||'todo')
-  const lane=index%7
-  if(state==='waiting') return {x:12+(lane*9)%66,y:82-(index%2)*5}
-  if(state==='tecnico') return {x:88-(index%3)*5,y:58+(index%4)*5}
-  return {x:22+(lane*8)%58,y:57+(index%3)*7}
-}
-
 export function useMaintenanceClients(user){
   const [issues,setIssues]=useState([])
   useEffect(()=>{
@@ -33,23 +25,6 @@ export function useMaintenanceClients(user){
     return()=>{alive=false;supabase.removeChannel(channel)}
   },[user])
   return issues
-}
-
-import { problemEmoji } from './pixel-sprites.js'
-
-export function MaintenanceClient({issue,index,onSelect}){
-  const p=npcPosition(issue,index)
-  const urgency=String(issue.urgenza||'media')
-  const state=String(issue.stato||'todo')
-  const emoji=problemEmoji(issue)
-  return <button className={'client client--'+state+' client--'+urgency} style={{'--cx':p.x+'%','--cy':p.y+'%'}} onClick={()=>onSelect(issue)} title={`${issue.categoria||'manutenzione'} · ${urgency}`}>
-    <span className="client-aura" aria-hidden="true"/>
-    <span className="client-mood">{emoji}</span>
-    <span className="client-head"/>
-    <span className="client-body"/>
-    <span className="client-legs"/>
-    <small>{issue.camera||'Hotel'}</small>
-  </button>
 }
 
 export function MaintenancePanel({issues,selected,onSelect,player,onStart,onFinish,syncMessage,canSync}){

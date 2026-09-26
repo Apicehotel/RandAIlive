@@ -60,7 +60,9 @@ test('the human maintainer is the player and maintenance reports are quests',()=
  assert.match(clients,/Prendi quest/)
  assert.match(clients,/Completa quest/)
  assert.match(quests,/localStorage/)
- assert.match(app,/Punto 5 · quest manutentore/)
+ assert.match(app,/ASCENSORI = cambia mappa/)
+ assert.match(app,/LIVE = runtime verificato/)
+ assert.match(app,/SIM = vita locale/)
 })
 
 test('operational quest sync is authenticated and hotel-scoped',()=>{

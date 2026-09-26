@@ -1,122 +1,146 @@
 import { gridToScreen, isoDepth } from './iso-math.js'
-import { allTiles, ISO_WORLD, roomById, themeFor } from './iso-world.js'
-import { floorTexture, generateIsoTextures, ISO_PALETTES } from './iso-textures.js'
+import { allTiles, areaAt, doorBetween, mapById, roomById, themeFor } from './iso-world.js'
+import { floorTexture, generateIsoTextures } from './iso-textures.js'
 import { drawIsoProps } from './iso-props.js'
 
 const wallPalette={
-  hotel:{top:0xd0b98d,left:0x876e52,right:0xa48a68,edge:0x554433},
-  wood:{top:0xa8794f,left:0x64452f,right:0x7b563a,edge:0x402d21},
-  service:{top:0x89979b,left:0x535f64,right:0x68767b,edge:0x354147},
-  spa:{top:0x9aa594,left:0x5d6d5c,right:0x738270,edge:0x3f4d40},
+  hotel:{top:0xe5d2ad,upper:0xcdb990,left:0x806b50,right:0xa28a66,lower:0x695642,edge:0x443729,trim:0xd3aa61},
+  wood:{top:0xc39769,upper:0x9c704c,left:0x60432f,right:0x79553b,lower:0x4c3325,edge:0x35241b,trim:0xd2a16c},
+  service:{top:0xb0bdc0,upper:0x859397,left:0x515f64,right:0x69777b,lower:0x3d494d,edge:0x2c383c,trim:0xd9a847},
+  spa:{top:0xbdc6b7,upper:0x99a594,left:0x5d6d5c,right:0x788674,lower:0x465546,edge:0x354236,trim:0xa8d3ae},
+  jazz:{top:0xbec8cc,upper:0x879ca7,left:0x526976,right:0x667f8d,lower:0x3b5260,edge:0x293c48,trim:0xd7ad58},
+  wine:{top:0xd0b8b7,upper:0xa37d80,left:0x674a50,right:0x805c62,lower:0x4e353b,edge:0x38252a,trim:0xd0a15f},
 }
 
-function areaAtTile(x,y){
-  return ISO_WORLD.rooms.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)
-    || ISO_WORLD.corridors.find(r=>x>=r.x&&x<r.x+r.w&&y>=r.y&&y<r.y+r.h)
-}
+const pairKey=(a,b)=>[`${a.x},${a.y}`,`${b.x},${b.y}`].sort().join('|')
 
-function drawWallSegment(scene,a,b,height,pal,depth){
-  const topA={x:a.x,y:a.y-height},topB={x:b.x,y:b.y-height}
-  const face=[topA,topB,b,a]
+function drawWallSegment(scene,a,b,height,pal,depth,cutaway=false){
   const g=scene.add.graphics().setDepth(depth)
-  const leftish=b.x<a.x
+  const topA={x:a.x,y:a.y-height},topB={x:b.x,y:b.y-height}
+  const face=[topA,topB,b,a],leftish=b.x<a.x
   g.fillStyle(leftish?pal.left:pal.right,1).fillPoints(face,true)
-  g.lineStyle(2,pal.edge,.7).strokePoints(face,true)
-  g.lineStyle(2,pal.top,.75).lineBetween(topA.x,topA.y,topB.x,topB.y)
-  g.lineStyle(1,0xffffff,.10).lineBetween(topA.x,topA.y+3,topB.x,topB.y+3)
+  const lowerA={x:a.x,y:a.y-Math.min(17,height)},lowerB={x:b.x,y:b.y-Math.min(17,height)}
+  g.fillStyle(pal.lower,.92).fillPoints([lowerA,lowerB,b,a],true)
+  g.lineStyle(3,pal.edge,.78).strokePoints(face,true)
+  g.lineStyle(4,pal.top,.96).lineBetween(topA.x,topA.y,topB.x,topB.y)
+  g.lineStyle(3,pal.trim,.72).lineBetween(lowerA.x,lowerA.y,lowerB.x,lowerB.y)
+  if(!cutaway&&height>40){
+    for(let t=.22;t<.9;t+=.28){
+      const ax=topA.x+(a.x-topA.x)*t,ay=topA.y+(a.y-topA.y)*t
+      const bx=topB.x+(b.x-topB.x)*t,by=topB.y+(b.y-topB.y)*t
+      g.lineStyle(1,pal.top,.14).lineBetween(ax,ay,bx,by)
+    }
+    g.lineStyle(1,0xffffff,.13).lineBetween(topA.x,topA.y+5,topB.x,topB.y+5)
+  }
   return g
 }
 
-function drawRoomWalls(scene,room){
-  const t=themeFor(room),pal=wallPalette[t.wall]||wallPalette.hotel
-  const h=78
-  const a=gridToScreen(room.x,room.y)
-  const b=gridToScreen(room.x+room.w,room.y)
-  const c=gridToScreen(room.x,room.y+room.h)
-  // Cutaway: only north + west backs, leaving front open.
-  const d1=drawWallSegment(scene,a,b,h,pal,1000+isoDepth(room.x+room.w,room.y))
-  const d2=drawWallSegment(scene,a,c,h,pal,1000+isoDepth(room.x,room.y+room.h))
-  return [d1,d2]
+function boundaryPalette(map,tile,neighbor){
+  const a=roomById(tile.areaId,map.id),b=neighbor?roomById(neighbor.areaId,map.id):null
+  const wall=themeFor(a).wall||themeFor(b).wall
+  return wallPalette[wall]||wallPalette.hotel
 }
 
-
-function drawCorridorRails(scene,corridor){
-  const pal=wallPalette.hotel,h=18
-  const a=gridToScreen(corridor.x,corridor.y)
-  const b=gridToScreen(corridor.x+corridor.w,corridor.y)
-  const c=gridToScreen(corridor.x+corridor.w,corridor.y+corridor.h)
-  const d=gridToScreen(corridor.x,corridor.y+corridor.h)
-  const depth=700+isoDepth(corridor.x+corridor.w,corridor.y+corridor.h)
-  const rails=corridor.axis==='h'
-    ? [drawWallSegment(scene,a,b,h,pal,depth),drawWallSegment(scene,d,c,h,pal,depth+1)]
-    : [drawWallSegment(scene,a,d,h,pal,depth),drawWallSegment(scene,b,c,h,pal,depth+1)]
-  const mid=gridToScreen(corridor.x+corridor.w/2,corridor.y+corridor.h/2)
-  const lamp=scene.add.ellipse(mid.x,mid.y,82,34,0xffd88f,.07).setDepth(250)
-  return [...rails,lamp]
-}
-
-function drawDoorThreshold(scene,p){
-  const s=gridToScreen(p.x,p.y)
-  const g=scene.add.graphics().setDepth(10500+isoDepth(p.x,p.y))
-  g.fillStyle(0x5b3a28,.95).fillEllipse(s.x,s.y,34,14)
-  g.lineStyle(3,0xd9b76b,.9).strokeEllipse(s.x,s.y,34,14)
-  g.fillStyle(0xffd88f,.12).fillEllipse(s.x,s.y-9,42,20)
-  return g
-}
-
-function drawDoorways(scene){
-  const nodes=[]
-  for(const connector of ISO_WORLD.connectors){
-    if(!connector.via?.length)continue
-    nodes.push(drawDoorThreshold(scene,connector.via[0]))
-    if(connector.via.length>1)nodes.push(drawDoorThreshold(scene,connector.via.at(-1)))
+function drawWalls(scene,map,tiles){
+  const nodes=[],seen=new Set(),cellMap=new Map(tiles.map(t=>[`${t.x},${t.y}`,t]))
+  const directions=[
+    {dx:0,dy:-1,edge:t=>[{x:t.x,y:t.y},{x:t.x+1,y:t.y}],cutaway:false},
+    {dx:-1,dy:0,edge:t=>[{x:t.x,y:t.y},{x:t.x,y:t.y+1}],cutaway:false},
+    {dx:0,dy:1,edge:t=>[{x:t.x,y:t.y+1},{x:t.x+1,y:t.y+1}],cutaway:true,outerOnly:true},
+    {dx:1,dy:0,edge:t=>[{x:t.x+1,y:t.y},{x:t.x+1,y:t.y+1}],cutaway:true,outerOnly:true},
+  ]
+  for(const tile of tiles)for(const dir of directions){
+    const next={x:tile.x+dir.dx,y:tile.y+dir.dy},neighbor=cellMap.get(`${next.x},${next.y}`)
+    if(dir.outerOnly&&neighbor)continue
+    if(neighbor){
+      const aa=roomById(tile.areaId,map.id),ab=roomById(neighbor.areaId,map.id)
+      if(tile.areaId===neighbor.areaId||(aa.kind==='circulation'&&ab.kind==='circulation'))continue
+      if(doorBetween(map,tile,next))continue
+    }
+    const edge=dir.edge(tile),key=pairKey(edge[0],edge[1]);if(seen.has(key))continue;seen.add(key)
+    const a=gridToScreen(edge[0].x,edge[0].y),b=gridToScreen(edge[1].x,edge[1].y)
+    const height=dir.cutaway?18:82,pal=boundaryPalette(map,tile,neighbor)
+    nodes.push(drawWallSegment(scene,a,b,height,pal,19000+isoDepth((edge[0].x+edge[1].x)/2,(edge[0].y+edge[1].y)/2),dir.cutaway))
   }
   return nodes
 }
 
-function addRoomLabel(scene,room){
-  const p=gridToScreen(room.x+room.w/2,room.y+.1,88)
-  const t=scene.add.text(p.x,p.y,room.label,{
-    fontFamily:'monospace',fontSize:'11px',fontStyle:'bold',color:'#fff6df',
-    backgroundColor:'#111820d9',padding:{left:7,right:7,top:3,bottom:3}
-  }).setOrigin(.5).setDepth(12000)
-  return t
+function doorwayEdge(d){
+  if(d.a.x===d.b.x){const y=Math.max(d.a.y,d.b.y);return [{x:d.a.x,y},{x:d.a.x+1,y}]}
+  const x=Math.max(d.a.x,d.b.x);return [{x,y:d.a.y},{x,y:d.a.y+1}]
 }
 
-function addAmbientPools(scene){
-  const defs=[
-    ['lobby',0xffd58b,.10,180],
-    ['bar',0xffb45d,.08,130],
-    ['reception',0xffd58b,.09,120],
-    ['technical',0x5ddcff,.08,110],
-    ['spa',0xb8e9aa,.07,120],
-  ]
-  return defs.map(([id,color,alpha,r])=>{
-    const room=roomById(id),p=gridToScreen(room.anchor.x,room.anchor.y)
-    return scene.add.ellipse(p.x,p.y,r*2,r,color,alpha).setDepth(200)
-  })
+function drawDoorways(scene,map){
+  const nodes=[],seen=new Set()
+  for(const d of map.doors){
+    const edge=doorwayEdge(d),key=pairKey(edge[0],edge[1]);if(seen.has(key))continue;seen.add(key)
+    const a=gridToScreen(edge[0].x,edge[0].y),b=gridToScreen(edge[1].x,edge[1].y),mx=(a.x+b.x)/2,my=(a.y+b.y)/2
+    const depth=20500+isoDepth((edge[0].x+edge[1].x)/2,(edge[0].y+edge[1].y)/2)
+    const g=scene.add.graphics().setDepth(depth)
+    g.lineStyle(12,0x4b3024,.95).lineBetween(a.x,a.y,b.x,b.y)
+    g.lineStyle(7,0xd3aa61,.92).lineBetween(a.x,a.y-2,b.x,b.y-2)
+    g.lineStyle(2,0xffedbf,.62).lineBetween(a.x,a.y-4,b.x,b.y-4)
+    for(const p of [a,b]){
+      g.fillStyle(0x3d2b22,1).fillRect(p.x-4,p.y-52,8,52)
+      g.fillStyle(0xd3aa61,1).fillRect(p.x-2,p.y-51,4,48)
+      g.fillStyle(0xffe4a0,.8).fillCircle(p.x,p.y-52,5)
+    }
+    g.fillStyle(0xffd88f,.075).fillEllipse(mx,my-17,76,38)
+    nodes.push(g)
+  }
+  return nodes
 }
 
-export function buildIsoHotel(scene){
-  generateIsoTextures(scene)
+function addRoomLabel(scene,map,room){
+  if(room.kind==='circulation'&&room.id!=='lobby'&&room.id!=='entrance')return null
+  const p=gridToScreen(room.anchor.x,room.anchor.y,96)
+  const compact=map.kind==='guest'&&room.id.startsWith('room-')
+  return scene.add.text(p.x,p.y,room.label,{
+    fontFamily:'Inter,system-ui,sans-serif',fontSize:compact?'10px':'12px',fontStyle:'bold',color:'#fff7e6',
+    backgroundColor:'#101820e6',padding:{left:compact?5:9,right:compact?5:9,top:4,bottom:4},stroke:'#000000',strokeThickness:1,
+  }).setOrigin(.5).setDepth(48000+isoDepth(room.anchor.x,room.anchor.y))
+}
+
+function addAmbientPools(scene,map){
+  const colors={lobby:0xffd58b,reception:0xffc96b,bar:0xffa44f,event:0x78a8ff,restaurant:0xffb65f,kitchen:0xc7e9ef,service:0x8bddeb,technical:0x55d7e9,warehouse:0xe2b76a,spa:0xa9e7b5,gym:0x72d9e8,jazz:0x78bde8,wine:0xe39a9f}
   const nodes=[]
-  const tiles=allTiles().sort((a,b)=>(a.x+a.y)-(b.x+b.y))
+  for(const room of map.areas){
+    if(room.kind==='circulation'&&room.id!=='lobby')continue
+    const p=gridToScreen(room.anchor.x,room.anchor.y),color=colors[room.theme]||0xffd58b
+    nodes.push(scene.add.ellipse(p.x,p.y,room.id==='lobby'?330:190,room.id==='lobby'?118:72,color,room.id==='lobby'?.09:.055).setDepth(-20000+isoDepth(room.anchor.x,room.anchor.y)))
+  }
+  return nodes
+}
+
+function addCeilingLights(scene,map){
+  const nodes=[]
+  for(const room of map.areas.filter(a=>a.kind==='circulation')){
+    const p=gridToScreen(room.anchor.x,room.anchor.y,112),g=scene.add.graphics().setDepth(47000+isoDepth(room.anchor.x,room.anchor.y))
+    g.fillStyle(0xffe1a0,.12).fillEllipse(p.x,p.y+80,145,54);g.fillStyle(0xffe8b3,1).fillEllipse(p.x,p.y,28,12);g.fillStyle(0xffffff,.75).fillEllipse(p.x,p.y-1,13,5)
+    nodes.push(g)
+  }
+  return nodes
+}
+
+function mapBounds(tiles){
+  const points=tiles.map(t=>gridToScreen(t.x+.5,t.y+.5)),xs=points.map(p=>p.x),ys=points.map(p=>p.y)
+  const minX=Math.min(...xs)-150,maxX=Math.max(...xs)+150,minY=Math.min(...ys)-190,maxY=Math.max(...ys)+145
+  return {x:minX,y:minY,width:maxX-minX,height:maxY-minY,centerX:(minX+maxX)/2,centerY:(minY+maxY)/2}
+}
+
+export function buildIsoHotel(scene,mapId='ground',{onElevator}={}){
+  const map=mapById(mapId);generateIsoTextures(scene)
+  const nodes=[],tiles=allTiles(map).sort((a,b)=>(a.x+a.y)-(b.x+b.y))
+  const bounds=mapBounds(tiles)
+  const base=scene.add.ellipse(bounds.centerX,bounds.centerY+90,bounds.width*.88,bounds.height*.53,0x000000,.32).setDepth(-50000);nodes.push(base)
   for(const tile of tiles){
-    const area=areaAtTile(tile.x,tile.y)
-    if(!area)continue
-    const p=gridToScreen(tile.x+.5,tile.y+.5)
-    const tex=floorTexture(themeFor(area).floor)
-    const image=scene.add.image(p.x,p.y,tex).setOrigin(.5,.5)
-    image.setDepth(-10000+isoDepth(tile.x,tile.y))
-    nodes.push(image)
+    const room=areaAt(map,tile.x,tile.y),p=gridToScreen(tile.x+.5,tile.y+.5)
+    const image=scene.add.image(p.x,p.y,floorTexture(themeFor(room).floor)).setOrigin(.5).setDepth(-10000+isoDepth(tile.x,tile.y));nodes.push(image)
   }
-  for(const corridor of ISO_WORLD.corridors)nodes.push(...drawCorridorRails(scene,corridor))
-  for(const room of ISO_WORLD.rooms){
-    nodes.push(...drawRoomWalls(scene,room))
-    nodes.push(addRoomLabel(scene,room))
-  }
-  nodes.push(...drawDoorways(scene))
-  nodes.push(...addAmbientPools(scene))
-  nodes.push(...drawIsoProps(scene,ISO_WORLD.rooms))
-  return {nodes,destroy(){for(const n of nodes)n?.destroy?.()}}
+  nodes.push(...addAmbientPools(scene,map),...drawWalls(scene,map,tiles),...drawDoorways(scene,map),...drawIsoProps(scene,map),...addCeilingLights(scene,map))
+  for(const room of map.areas){const label=addRoomLabel(scene,map,room);if(label)nodes.push(label)}
+  const lift=roomById(map.elevatorArea,map.id),lp=gridToScreen(lift.anchor.x,lift.anchor.y)
+  const liftZone=scene.add.zone(lp.x,lp.y-28,170,120).setInteractive({useHandCursor:true}).setDepth(60000+isoDepth(lift.anchor.x,lift.anchor.y))
+  liftZone.on('pointerdown',()=>onElevator?.(map.id));nodes.push(liftZone)
+  return {map,nodes,bounds,liftZone,destroy(){for(const n of nodes)n?.destroy?.()}}
 }

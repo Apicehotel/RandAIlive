@@ -1,110 +1,184 @@
-const rect=(id,label,x,y,w,h,theme,anchor)=>({id,label,x,y,w,h,theme,anchor:anchor||{x:x+w/2,y:y+h/2}})
-const hall=(id,x,y,w,h,axis='v')=>({id,x,y,w,h,axis,theme:'corridor'})
+import { propLayoutFor } from './iso-props.js'
 
-export const ISO_WORLD={
-  width:1920,
-  height:1180,
-  rooms:[
-    rect('lobby','HALL',0,0,7,6,'lobby',{x:3.5,y:3}),
-    rect('reception','RECEPTION',1,-3,4,3,'reception',{x:3,y:-1.3}),
-    rect('bar','BAR & LOUNGE',-5,-1,5,5,'bar',{x:-2.3,y:1.5}),
-    rect('congress','CONGRESSI',-7,5,6,5,'event',{x:-4,y:7.5}),
-    rect('meeting','MEETING',-1,6,4,4,'event',{x:1,y:8}),
-    rect('restaurant','RISTORANTE',7,-1,5,5,'restaurant',{x:9.3,y:1.5}),
-    rect('kitchen','CUCINA',11,4,4,4,'service',{x:13,y:6}),
-    rect('service','SERVICE',4,8,7,5,'service',{x:7.5,y:10.4}),
-    rect('technical','MANUTENZIONE',3,13,4,3,'technical',{x:5,y:14.5}),
-    rect('warehouse','MAGAZZINO',8,13,4,3,'service',{x:10,y:14.5}),
-    rect('spa','SPA',12,9,4,4,'spa',{x:14,y:11}),
-    rect('gym','PALESTRA',12,14,4,3,'gym',{x:14,y:15.5}),
-    rect('elevators','ASCENSORI',2,-7,3,3,'elevator',{x:3.5,y:-5.5}),
-    rect('entrance','INGRESSO',1,7,5,2,'entrance',{x:3.5,y:8}),
-  ],
-  corridors:[
-    hall('lift-corridor',2,-4,3,1,'v'),
-    hall('west-gallery',-2,4,3,3,'h'),
-    hall('congress-gallery',-3,5,2,4,'v'),
-    hall('south-gallery',2,6,3,2,'v'),
-    hall('service-link',4,6,4,2,'h'),
-    hall('east-gallery',7,4,5,2,'h'),
-    hall('kitchen-link',10,5,2,3,'v'),
-    hall('service-spine',6,7,3,2,'v'),
-    hall('spa-link',11,10,2,2,'h'),
-    hall('gym-link',13,13,2,2,'v'),
-  ],
-  connectors:[
-    {from:'reception',to:'lobby',via:[{x:3,y:-.2},{x:3,y:.6}]},
-    {from:'bar',to:'lobby',via:[{x:-.3,y:1.8},{x:.7,y:1.8}]},
-    {from:'congress',to:'lobby',via:[{x:-1.8,y:6.5},{x:-.5,y:5.2},{x:.7,y:4.4}]},
-    {from:'meeting',to:'lobby',via:[{x:1.2,y:6.3},{x:1.5,y:5.3}]},
-    {from:'restaurant',to:'lobby',via:[{x:7.3,y:1.8},{x:6.3,y:1.8}]},
-    {from:'kitchen',to:'restaurant',via:[{x:11.2,y:5.5},{x:10.5,y:4.6}]},
-    {from:'service',to:'lobby',via:[{x:7.1,y:8.1},{x:6.4,y:7.2},{x:5.2,y:6.2}]},
-    {from:'technical',to:'service',via:[{x:5.1,y:13.1},{x:5.5,y:12.2}]},
-    {from:'warehouse',to:'service',via:[{x:10,y:13.1},{x:9.6,y:12.2}]},
-    {from:'spa',to:'service',via:[{x:12.1,y:11},{x:11.2,y:10.8},{x:10.5,y:10.8}]},
-    {from:'gym',to:'spa',via:[{x:14,y:14.1},{x:14,y:12.8}]},
-    {from:'elevators',to:'reception',via:[{x:3.5,y:-4.1},{x:3.5,y:-3.2}]},
-    {from:'entrance',to:'lobby',via:[{x:3.5,y:7.1},{x:3.5,y:5.7}]},
+const rect=(x,y,w,h)=>({x,y,w,h})
+const area=(id,label,theme,shapes,anchor,kind='room')=>({id,label,theme,shapes,anchor,kind})
+const door=(id,areaA,areaB,a,b,width=1)=>({id,areaA,areaB,a,b,width})
+
+const GROUND_AREAS=[
+  area('lobby','HALL · CUORE HOTEL','lobby',[rect(10,10,8,6),rect(12,16,6,4)],{x:14,y:13.5},'circulation'),
+  area('north-gallery','GALLERIA ASCENSORI','corridor',[rect(8,7,15,3)],{x:15.5,y:8.5},'circulation'),
+  area('west-gallery','GALLERIA EVENTI','corridor',[rect(4,10,6,3),rect(6,13,3,7)],{x:7.5,y:12.5},'circulation'),
+  area('east-gallery','GALLERIA RISTORANTE','corridor',[rect(18,10,10,3),rect(23,7,6,3)],{x:24.5,y:11.5},'circulation'),
+  area('service-spine','PASSAGGIO SERVICE','serviceCorridor',[rect(18,13,3,11),rect(20,18,8,3)],{x:19.5,y:18.5},'circulation'),
+  area('entrance-promenade','PROMENADE','corridor',[rect(13,20,4,3)],{x:14.5,y:21.5},'circulation'),
+  area('reception','RECEPTION','reception',[rect(9,3,6,4),rect(8,4,1,2)],{x:12.5,y:5.5}),
+  area('elevators','ASCENSORI','elevator',[rect(16,3,5,4)],{x:18.5,y:5.5}),
+  area('bar','BAR & LOUNGE','bar',[rect(1,4,7,6),rect(2,3,4,1)],{x:4.5,y:7.5}),
+  area('congress','CONGRESSI','event',[rect(0,14,6,9),rect(1,13,4,1)],{x:3.5,y:18.5}),
+  area('meeting','MEETING','event',[rect(9,16,3,6)],{x:10.5,y:18.5}),
+  area('restaurant','RISTORANTE','restaurant',[rect(28,10,6,7),rect(26,13,2,3)],{x:30.5,y:13.5}),
+  area('kitchen','CUCINA','kitchen',[rect(28,17,6,6),rect(30,23,4,1)],{x:31,y:20}),
+  area('service','SERVICE & LAVANDERIA','service',[rect(21,13,5,5)],{x:23.5,y:15.5}),
+  area('technical','MANUTENZIONE','technical',[rect(22,21,5,5),rect(27,22,1,3)],{x:24.5,y:23.5}),
+  area('warehouse','MAGAZZINO','warehouse',[rect(17,24,5,4)],{x:19.5,y:26}),
+  area('spa','SPA','spa',[rect(23,2,6,5),rect(25,1,3,1)],{x:26,y:4.5}),
+  area('gym','PALESTRA','gym',[rect(29,4,5,6),rect(30,3,3,1)],{x:31.5,y:7}),
+  area('entrance','INGRESSO','entrance',[rect(11,23,5,4),rect(16,24,1,3)],{x:14,y:25},'circulation'),
+]
+
+const GROUND_DOORS=[
+  door('reception-main','reception','north-gallery',{x:11,y:6},{x:11,y:7},2),
+  door('reception-side','reception','north-gallery',{x:14,y:6},{x:14,y:7}),
+  door('lift-main','elevators','north-gallery',{x:18,y:6},{x:18,y:7},2),
+  door('bar-gallery','bar','north-gallery',{x:7,y:8},{x:8,y:8},2),
+  door('congress-gallery','congress','west-gallery',{x:5,y:17},{x:6,y:17},2),
+  door('meeting-gallery','meeting','west-gallery',{x:9,y:18},{x:8,y:18},2),
+  door('restaurant-main','restaurant','east-gallery',{x:28,y:11},{x:27,y:11},2),
+  door('restaurant-kitchen','restaurant','kitchen',{x:30,y:16},{x:30,y:17},2),
+  door('kitchen-service','kitchen','service-spine',{x:28,y:19},{x:27,y:19}),
+  door('service-main','service','service-spine',{x:21,y:15},{x:20,y:15},2),
+  door('technical-main','technical','service-spine',{x:23,y:21},{x:23,y:20},2),
+  door('warehouse-main','warehouse','service-spine',{x:19,y:24},{x:19,y:23},2),
+  door('spa-gallery','spa','east-gallery',{x:25,y:6},{x:25,y:7},2),
+  door('gym-gallery','gym','east-gallery',{x:29,y:8},{x:28,y:8},2),
+]
+
+function guestFloor(id,label,theme,floorNumber,officeCount){
+  const prefix=String(floorNumber)
+  const areas=[
+    area('floor-corridor',`${label.toUpperCase()} · PIANO ${floorNumber}`,theme==='jazz'?'jazzCorridor':'wineCorridor',[rect(4,5,21,3)],{x:14.5,y:6.5},'circulation'),
+    area('elevators','ASCENSORI','elevator',[rect(11,1,4,4)],{x:13,y:3}),
+    area('floor-lounge','LOUNGE DI PIANO',theme==='jazz'?'jazzLounge':'wineLounge',[rect(11,8,4,5)],{x:13,y:10.5}),
   ]
+  const rooms=[
+    [1,1,1,5,4,3,4,3,5],[2,6,1,5,4,8,4,8,5],[3,15,1,5,4,17,4,17,5],[4,20,1,5,4,22,4,22,5],
+    [5,1,8,5,5,3,8,3,7],[6,6,8,5,5,8,8,8,7],[7,15,8,5,5,17,8,17,7],[8,20,8,5,5,22,8,22,7],
+  ]
+  const doors=[door('lift-floor','elevators','floor-corridor',{x:12,y:4},{x:12,y:5},2),door('lounge-floor','floor-lounge','floor-corridor',{x:12,y:8},{x:12,y:7},2)]
+  for(const [n,x,y,w,h,dx,dy,cx,cy] of rooms){
+    const roomId=`room-${prefix}${String(n).padStart(2,'0')}`
+    areas.push(area(roomId,`CAMERA ${prefix}${String(n).padStart(2,'0')}`,theme,[rect(x,y,w,h)],{x:x+w/2,y:y+h/2}))
+    doors.push(door(`${roomId}-door`,roomId,'floor-corridor',{x:dx,y:dy},{x:cx,y:cy}))
+  }
+  for(let i=0;i<officeCount;i++){
+    const x=i?25:0
+    areas.push(area(`office-${i+1}`,`OFFICE ${i+1}`,theme==='jazz'?'jazzService':'wineService',[rect(x,5,4,3)],{x:x+2,y:6.5}))
+    doors.push(door(`office-${i+1}-door`,`office-${i+1}`,'floor-corridor',i?{x:25,y:6}:{x:3,y:6},i?{x:24,y:6}:{x:4,y:6}))
+  }
+  return {id,label:`${label} · Piano ${floorNumber}`,shortLabel:`${label} ${floorNumber}`,kind:'guest',theme,level:floorNumber,width:29,height:14,areas,doors,elevatorArea:'elevators'}
 }
 
-const themes={
-  lobby:{floor:'marble',wall:'hotel'},
-  reception:{floor:'marble',wall:'hotel'},
-  bar:{floor:'wood',wall:'wood'},
-  event:{floor:'carpet',wall:'hotel'},
-  restaurant:{floor:'wood',wall:'hotel'},
-  service:{floor:'service',wall:'service'},
-  technical:{floor:'service',wall:'service'},
-  spa:{floor:'stone',wall:'spa'},
-  gym:{floor:'rubber',wall:'service'},
-  elevator:{floor:'marble',wall:'hotel'},
-  entrance:{floor:'stone',wall:'hotel'},
-  corridor:{floor:'corridor',wall:'hotel'},
-}
-export const roomById=id=>ISO_WORLD.rooms.find(r=>r.id===id)||ISO_WORLD.rooms[0]
-export const themeFor=r=>themes[r.theme]||themes.lobby
+const ground={id:'ground',label:'Hotel Giò · Piano Terra',shortLabel:'Piano Terra',kind:'ground',level:0,width:35,height:29,areas:GROUND_AREAS,doors:GROUND_DOORS,elevatorArea:'elevators'}
+const floors=[1,2,3,4].map(n=>guestFloor(`jazz${n}`,'Jazz','jazz',n,1)).concat([5,6,7,8].map(n=>guestFloor(`wine${n}`,'Wine','wine',n,2)))
 
-export function tilesForRect(r){
-  const out=[]
-  for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++)out.push({x,y,roomId:r.id,kind:r.theme==='corridor'?'corridor':'room'})
-  return out
-}
-export const tilesForRoom=tilesForRect
+export const ISO_MAPS=Object.freeze([ground,...floors])
+export const ISO_WORLD=ground
+export const DEFAULT_MAP_ID='ground'
 
-export function allTiles(){
+const cellKey=(x,y)=>`${x},${y}`
+const edgeKey=(a,b)=>[cellKey(a.x,a.y),cellKey(b.x,b.y)].sort().join('|')
+
+function cellsForArea(areaDef){
   const seen=new Map()
-  for(const corridor of ISO_WORLD.corridors)for(const t of tilesForRect(corridor))seen.set(`${t.x},${t.y}`,t)
-  for(const room of ISO_WORLD.rooms)for(const t of tilesForRect(room))seen.set(`${t.x},${t.y}`,t)
+  for(const shape of areaDef.shapes)for(let y=shape.y;y<shape.y+shape.h;y++)for(let x=shape.x;x<shape.x+shape.w;x++)seen.set(cellKey(x,y),{x,y,areaId:areaDef.id,kind:areaDef.kind})
   return [...seen.values()]
 }
 
-export function connectorByRooms(a,b){
-  return ISO_WORLD.connectors.find(c=>(c.from===a&&c.to===b)||(c.from===b&&c.to===a))
+const mapCaches=new Map()
+function cacheFor(mapOrId=DEFAULT_MAP_ID){
+  const map=typeof mapOrId==='string'?mapById(mapOrId):mapOrId
+  if(mapCaches.has(map.id))return mapCaches.get(map.id)
+  const cells=new Map()
+  for(const a of map.areas)for(const cell of cellsForArea(a)){
+    if(cells.has(cellKey(cell.x,cell.y)))throw new Error(`Overlapping isometric cells at ${map.id}:${cell.x},${cell.y}`)
+    cells.set(cellKey(cell.x,cell.y),cell)
+  }
+  const doors=new Map()
+  for(const d of map.doors){
+    doors.set(edgeKey(d.a,d.b),d)
+    if(d.width>1){
+      const horizontal=d.a.y===d.b.y
+      for(let i=1;i<d.width;i++){
+        const da={x:d.a.x+(horizontal?0:i),y:d.a.y+(horizontal?i:0)}
+        const db={x:d.b.x+(horizontal?0:i),y:d.b.y+(horizontal?i:0)}
+        doors.set(edgeKey(da,db),{...d,a:da,b:db,part:i})
+      }
+    }
+  }
+  const nonBlocking=new Set(['lamp','elevatorDoors','screen'])
+  const blocked=new Set(propLayoutFor(map).filter(([type])=>!nonBlocking.has(type)).map(([,x,y])=>cellKey(Math.floor(x),Math.floor(y))))
+  const value={map,cells,doors,blocked}
+  mapCaches.set(map.id,value)
+  return value
 }
 
-export function routeZones(fromId,toId){
-  if(fromId===toId)return [roomById(toId).anchor]
-  const graph=new Map()
-  for(const c of ISO_WORLD.connectors){
-    if(!graph.has(c.from))graph.set(c.from,[])
-    if(!graph.has(c.to))graph.set(c.to,[])
-    graph.get(c.from).push(c.to);graph.get(c.to).push(c.from)
+export function mapById(id=DEFAULT_MAP_ID){return ISO_MAPS.find(m=>m.id===id)||ground}
+export function roomById(id,mapId=DEFAULT_MAP_ID){const map=mapById(mapId);return map.areas.find(r=>r.id===id)||map.areas[0]}
+export function areaAt(mapOrId,x,y){const {map,cells}=cacheFor(mapOrId);const cell=cells.get(cellKey(Math.floor(x),Math.floor(y)));return cell?roomById(cell.areaId,map.id):null}
+export function allTiles(mapOrId=DEFAULT_MAP_ID){return [...cacheFor(mapOrId).cells.values()]}
+export function tilesForRoom(areaDef){return cellsForArea(areaDef)}
+export const tilesForRect=shape=>cellsForArea({...shape,id:'shape',kind:'room',shapes:[shape]})
+export function doorBetween(mapOrId,a,b){return cacheFor(mapOrId).doors.get(edgeKey(a,b))||null}
+
+const themes={
+  lobby:{floor:'marble',wall:'hotel'},reception:{floor:'marbleDark',wall:'hotel'},bar:{floor:'wood',wall:'wood'},event:{floor:'carpet',wall:'hotel'},restaurant:{floor:'wood',wall:'hotel'},kitchen:{floor:'kitchen',wall:'service'},service:{floor:'service',wall:'service'},serviceCorridor:{floor:'serviceRunner',wall:'service'},technical:{floor:'technical',wall:'service'},warehouse:{floor:'concrete',wall:'service'},spa:{floor:'stone',wall:'spa'},gym:{floor:'rubber',wall:'service'},elevator:{floor:'marbleDark',wall:'hotel'},entrance:{floor:'stone',wall:'hotel'},corridor:{floor:'corridor',wall:'hotel'},jazz:{floor:'jazzCarpet',wall:'jazz'},jazzCorridor:{floor:'jazzCorridor',wall:'jazz'},jazzLounge:{floor:'wood',wall:'jazz'},jazzService:{floor:'service',wall:'service'},wine:{floor:'wineCarpet',wall:'wine'},wineCorridor:{floor:'wineCorridor',wall:'wine'},wineLounge:{floor:'woodDark',wall:'wine'},wineService:{floor:'service',wall:'service'},
+}
+export const themeFor=a=>themes[a?.theme]||themes.lobby
+
+function canCross(map,a,b){
+  const cache=cacheFor(map),ca=cache.cells.get(cellKey(a.x,a.y)),cb=cache.cells.get(cellKey(b.x,b.y))
+  if(!ca||!cb)return false
+  if(cache.blocked.has(cellKey(b.x,b.y)))return false
+  if(ca.areaId===cb.areaId)return true
+  const aa=roomById(ca.areaId,map.id),ab=roomById(cb.areaId,map.id)
+  if(aa.kind==='circulation'&&ab.kind==='circulation')return true
+  return Boolean(doorBetween(map,a,b))
+}
+
+export function isStepWalkable(mapOrId,a,b){
+  const map=typeof mapOrId==='string'?mapById(mapOrId):mapOrId
+  return canCross(map,a,b)
+}
+
+function nearestCell(map,point){
+  const cells=allTiles(map)
+  return cells.reduce((best,c)=>{
+    const d=(c.x+.5-point.x)**2+(c.y+.5-point.y)**2
+    return !best||d<best.d?{...c,d}:best
+  },null)
+}
+
+export function findPath(mapOrId,start,end){
+  const map=typeof mapOrId==='string'?mapById(mapOrId):mapOrId
+  const from=nearestCell(map,start),to=nearestCell(map,end)
+  if(!from||!to)return []
+  const q=[from],came=new Map([[cellKey(from.x,from.y),null]])
+  for(let qi=0;qi<q.length;qi++){
+    const current=q[qi]
+    if(current.x===to.x&&current.y===to.y)break
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const next={x:current.x+dx,y:current.y+dy},key=cellKey(next.x,next.y)
+      if(came.has(key)||!canCross(map,current,next))continue
+      came.set(key,current);q.push(next)
+    }
   }
-  const q=[[fromId]],seen=new Set([fromId])
-  let chain=null
-  while(q.length){
-    const p=q.shift(),last=p.at(-1)
-    if(last===toId){chain=p;break}
-    for(const n of graph.get(last)||[])if(!seen.has(n)){seen.add(n);q.push([...p,n])}
-  }
-  const rooms=chain||[fromId,toId]
-  const points=[]
-  for(let i=0;i<rooms.length-1;i++){
-    const c=connectorByRooms(rooms[i],rooms[i+1])
-    if(c?.via?.length)points.push(...(c.from===rooms[i]?c.via:[...c.via].reverse()))
-    points.push(roomById(rooms[i+1]).anchor)
-  }
-  return points
+  if(!came.has(cellKey(to.x,to.y)))return []
+  const result=[]
+  for(let cur=to;cur;cur=came.get(cellKey(cur.x,cur.y)))result.push({x:cur.x+.5,y:cur.y+.5})
+  return result.reverse()
+}
+
+export function routeAreas(fromId,toId,mapId=DEFAULT_MAP_ID){
+  const map=mapById(mapId),from=roomById(fromId,map.id),to=roomById(toId,map.id)
+  return findPath(map,from.anchor,to.anchor)
+}
+export const routeZones=(fromId,toId)=>routeAreas(fromId,toId,DEFAULT_MAP_ID)
+
+export function destinationForZone(zone){
+  if(/^jazz[1-4]$/.test(zone)||/^wine[5-8]$/.test(zone))return {mapId:zone,areaId:'floor-lounge'}
+  if(zone==='hub'||zone==='randhub')return {mapId:'ground',areaId:'lobby'}
+  if(zone==='exterior')return {mapId:'ground',areaId:'entrance'}
+  if(zone==='ironing'||zone==='laundry'||zone==='staff')return {mapId:'ground',areaId:'service'}
+  if(zone==='breakfast')return {mapId:'ground',areaId:'restaurant'}
+  return {mapId:'ground',areaId:ground.areas.some(r=>r.id===zone)?zone:'lobby'}
 }
