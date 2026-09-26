@@ -58,8 +58,9 @@ test('phase 2 uses a dedicated 2.5D isometric world and renderer', () => {
 test('phase 4 routes agents through connected isometric hotel zones', () => {
   const scene = read('src/phaser-world.js')
   const world = read('src/iso/iso-world.js')
-  assert.match(scene, /routeZones/)
+  assert.match(scene, /routeAreas/)
   assert.match(scene, /node\.route/)
-  assert.match(world, /function routeZones/)
-  assert.match(world, /connectors/)
+  assert.match(world, /function routeAreas/)
+  assert.match(world, /findPath/)
+  assert.match(world, /doorBetween/)
 })

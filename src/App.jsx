@@ -71,7 +71,7 @@ export default function App(){
   <section className="layout">
    <div className="world-card">
     <PhaserWorld agents={agents} issues={issues.filter(issue=>!player.completedIssueIds.includes(issue.id))} selectedId={focus} onSelect={selectAgent} onSelectIssue={setSelectedIssue} director={director}/>
-    <footer className="legend"><span>TRASCINA = camera</span><span>ROTELLINA = zoom</span><span>CLICCA AI = segui</span><span>AURA CLIENTE = urgenza · fumetto = problema</span><span>Punto 5 · quest manutentore</span></footer>
+    <footer className="legend"><span>TRASCINA = camera</span><span>PINCH/ROTELLINA = zoom</span><span>ASCENSORI = cambia mappa</span><span>CLICCA AI = segui</span><span>LIVE = runtime verificato</span><span>SIM = vita locale</span></footer>
    </div>
    <aside className="sidebar">
     <GameHud agent={gameAgent} stat={game.stats[gameAgent.id]} day={game.day} quest={game.quest} log={game.log} hotel={game.hotel} onAction={act}/>

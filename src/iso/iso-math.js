@@ -1,6 +1,6 @@
 export const ISO_TILE_W=128
 export const ISO_TILE_H=64
-export const ISO_ORIGIN={x:960,y:120}
+export const ISO_ORIGIN={x:2048,y:128}
 
 export function gridToScreen(gx,gy,z=0){
   return {
@@ -18,4 +18,4 @@ export function screenToGrid(sx,sy){
   }
 }
 
-export function isoDepth(gx,gy,z=0){return (gx+gy)*100+z}
+export function isoDepth(gx,gy,z=0){return (gx+gy)*1000+z}

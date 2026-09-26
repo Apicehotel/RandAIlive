@@ -1,24 +1,18 @@
-name: randailive
+name: randailive-preview
 region: fra
-services:
-  - name: web
-    dockerfile_path: Dockerfile
+static_sites:
+  - name: randailive-preview
+    environment_slug: node-js
     github:
       repo: Apicehotel/RandAIlive
-      branch: main
+      branch: feat/iso-hotel-game-v2
       deploy_on_push: false
-    http_port: 80
-    instance_count: 1
-    instance_size_slug: basic-xxs
-    health_check:
-      http_path: /healthz
+    build_command: npm ci && npm run build
+    output_dir: dist
+    index_document: index.html
+    catchall_document: index.html
     envs:
-      - key: VITE_SUPABASE_URL
-        scope: BUILD_TIME
-        type: SECRET
-      - key: VITE_SUPABASE_ANON_KEY
-        scope: BUILD_TIME
-        type: SECRET
       - key: VITE_RANDAILIVE_HOTEL_ID
         scope: BUILD_TIME
+        type: GENERAL
         value: hotelgio
