@@ -206,14 +206,21 @@ La v2 sostituisce quel renderer con una planimetria continua:
 La regola resta: artwork StarNet non viene copiato. Della repository upstream si sfruttano pattern tecnici e architetturali compatibili con MIT, mentre mondo, grafica e personaggi restano Rand.
 
 
-## Hotel World v3 · pipeline StarNet-inspired
 
-La v2 continua è stata utile come prova di layout, ma il renderer risultava ancora troppo piatto. La v3 sostituisce il percorso grafico attivo con quattro responsabilità separate, seguendo il principio architetturale osservato in StarNet senza incorporarne artwork o branding:
 
-`hotel-world-v3.js` → `hotel-bake-v3.js` → `hotel-props-v3.js` → `hotel-renderer-v3.js` → Phaser.
+## Rewrite 2.5D HD
 
-La mappa è volutamente inventata per il gioco: otto aree Jazz/Wine leggibili in alto, corridoio camere, nucleo Hall/Reception, Congressi e Meeting a sinistra, Bar/Ristorante/Cucina a destra, Rand Hub centrale e fascia Service con Lavanderia, Stireria, Magazzino, Manutenzione, Staff, SPA e Palestra. I percorsi passano attraverso corridoi comuni invece di saltare tra riquadri.
+La pipeline grafica precedente è stata rimossa dal percorso attivo dopo revisione visiva. RandAILive usa ora una scena isometrica 2.5D con tile 128×64, planimetria irregolare e ambienti separati per funzione.
 
-Il bake statico introduce materiali differenziati, pareti con altezza/cutaway, rampe di luce/ombra e light pool per ambiente. Gli arredi sono separati e ordinati per profondità; gli agenti sono entità runtime sopra il mondo statico e usano il routing del world model. La pipeline è predisposta per sostituire gradualmente gli arredi procedurali con sprite originali Rand senza cambiare logica, routing o stato live.
+Struttura attiva:
 
-La v3 elimina dal percorso attivo `hall-map.json` e `hotel-layout-v2.js`, così resta una sola fonte di verità grafica. StarNet resta una fonte tecnica MIT per pattern architetturali; nome, logo, artwork e sprite StarNet non vengono copiati.
+- `src/iso/iso-math.js`: proiezione isometrica 2:1 e conversioni coordinate;
+- `src/iso/iso-world.js`: piano terra inventato per il gioco, con Hall, Reception, Bar, Congressi, Meeting, Ristorante, Cucina, Service, Manutenzione, Magazzino, SPA, Palestra, Ascensori e Ingresso;
+- `src/iso/iso-textures.js`: texture procedurali HD per marmo, legno, moquette, service, pietra e gomma;
+- `src/iso/iso-props.js`: arredi 2.5D con facce illuminate, ombre e profondità;
+- `src/iso/iso-renderer.js`: pavimenti tile-by-tile, muri estrusi cutaway, luci e composizione;
+- `src/phaser-world.js`: agenti/clienti live, camera e movimento sopra il mondo isometrico.
+
+I piani Jazz/Wine non sono più mostrati come otto box sullo stesso schermo: il piano terra usa un nucleo ascensori che diventerà il punto di ingresso a mappe separate dei piani camere.
+
+La grafica usa texture procedurali originali Rand nel primo passaggio HD. Le repository esterne consultate restano fonti tecniche/asset con licenza verificata e sono documentate in `docs/ASSET_SOURCES.md`.

@@ -44,24 +44,22 @@ test('phase 1 uses a separate Phaser world runtime', () => {
   assert.match(scene, /createLivingWorldGame/)
 })
 
-test('phase 2 projects a dedicated Hotel Gio world model into the renderer', () => {
+test('phase 2 uses a dedicated 2.5D isometric world and renderer', () => {
   const scene = read('src/phaser-world.js')
-  const world = read('src/hotel-world-v3.js')
-  const bake = read('src/hotel-bake-v3.js')
-  const renderer = read('src/hotel-renderer-v3.js')
-  assert.match(scene, /projectWorld/)
-  assert.match(world, /function projectWorld/)
-  assert.match(bake, /function bakeHotel/)
-  assert.match(renderer, /createHotelRenderer/)
+  const world = read('src/iso/iso-world.js')
+  const renderer = read('src/iso/iso-renderer.js')
+  const textures = read('src/iso/iso-textures.js')
+  assert.match(scene, /buildIsoHotel/)
+  assert.match(world, /ISO_WORLD/)
+  assert.match(renderer, /buildIsoHotel/)
+  assert.match(textures, /generateIsoTextures/)
 })
 
-test('phase 4 routes agents through the v3 hotel corridors instead of teleporting', () => {
+test('phase 4 routes agents through connected isometric hotel zones', () => {
   const scene = read('src/phaser-world.js')
-  const world = read('src/hotel-world-v3.js')
-  assert.match(scene, /routeBetween/)
+  const world = read('src/iso/iso-world.js')
+  assert.match(scene, /routeZones/)
   assert.match(scene, /node\.route/)
-  assert.match(world, /function routeBetween/)
-  assert.match(world, /doorwayOf/)
-  assert.match(world, /y:282/)
-  assert.match(world, /y:648/)
+  assert.match(world, /function routeZones/)
+  assert.match(world, /connectors/)
 })
