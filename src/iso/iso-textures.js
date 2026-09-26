@@ -7,6 +7,7 @@ const palettes={
   service:{top:0x667278,light:0x87959a,dark:0x434c51,line:0x343c40},
   stone:{top:0x8f8b7d,light:0xb2ad9b,dark:0x625f56,line:0x535048},
   rubber:{top:0x4b545a,light:0x667177,dark:0x30373b,line:0x272d30},
+  corridor:{top:0xc6b18b,light:0xe6d1a9,dark:0x8f7758,line:0x775f45,runner:0x7d2634,runnerLight:0xa94957},
 }
 
 function diamond(g,c){
@@ -46,6 +47,20 @@ function drawTile(g,p,type){
     line(g,{x:40,y:48},{x:86,y:34},p.dark,1,.14)
   }else if(type==='rubber'){
     for(let y=17;y<49;y+=8)for(let x=28;x<100;x+=16)g.fillStyle(p.dark,.26).fillCircle(x,y,2)
+  }else if(type==='corridor'){
+    // polished stone border + hotel runner carpet through the tile centre
+    g.fillStyle(p.runner,.92).fillPoints([{x:64,y:12},{x:105,y:32},{x:64,y:52},{x:23,y:32}],true)
+    g.lineStyle(2,p.runnerLight,.42).strokePoints([{x:64,y:12},{x:105,y:32},{x:64,y:52},{x:23,y:32}],true)
+    g.lineStyle(1,p.light,.20).strokePoints([{x:64,y:16},{x:97,y:32},{x:64,y:48},{x:31,y:32}],true)
+    for(let i=0;i<5;i++){
+      const x=38+i*13
+      g.fillStyle(i%2?p.runnerLight:p.dark,.08).fillCircle(x,32,1.2)
+    }
+  }
+  // deterministic micro-grain so large areas do not read as flat vector blocks
+  for(let i=0;i<22;i++){
+    const x=10+((i*37)%108), y=8+((i*23)%48)
+    g.fillStyle(i%3===0?p.light:p.dark,i%3===0?.045:.035).fillCircle(x,y,.7)
   }
 }
 

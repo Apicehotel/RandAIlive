@@ -1,10 +1,11 @@
 const rect=(id,label,x,y,w,h,theme,anchor)=>({id,label,x,y,w,h,theme,anchor:anchor||{x:x+w/2,y:y+h/2}})
+const hall=(id,x,y,w,h,axis='v')=>({id,x,y,w,h,axis,theme:'corridor'})
 
 export const ISO_WORLD={
   width:1920,
   height:1180,
   rooms:[
-    rect('lobby','HALL',{x:0}.x,0,7,6,'lobby',{x:3.5,y:3}),
+    rect('lobby','HALL',0,0,7,6,'lobby',{x:3.5,y:3}),
     rect('reception','RECEPTION',1,-3,4,3,'reception',{x:3,y:-1.3}),
     rect('bar','BAR & LOUNGE',-5,-1,5,5,'bar',{x:-2.3,y:1.5}),
     rect('congress','CONGRESSI',-7,5,6,5,'event',{x:-4,y:7.5}),
@@ -19,20 +20,32 @@ export const ISO_WORLD={
     rect('elevators','ASCENSORI',2,-7,3,3,'elevator',{x:3.5,y:-5.5}),
     rect('entrance','INGRESSO',1,7,5,2,'entrance',{x:3.5,y:8}),
   ],
+  corridors:[
+    hall('lift-corridor',2,-4,3,1,'v'),
+    hall('west-gallery',-2,4,3,3,'h'),
+    hall('congress-gallery',-3,5,2,4,'v'),
+    hall('south-gallery',2,6,3,2,'v'),
+    hall('service-link',4,6,4,2,'h'),
+    hall('east-gallery',7,4,5,2,'h'),
+    hall('kitchen-link',10,5,2,3,'v'),
+    hall('service-spine',6,7,3,2,'v'),
+    hall('spa-link',11,10,2,2,'h'),
+    hall('gym-link',13,13,2,2,'v'),
+  ],
   connectors:[
-    {from:'reception',to:'lobby'},
-    {from:'bar',to:'lobby'},
-    {from:'congress',to:'lobby'},
-    {from:'meeting',to:'lobby'},
-    {from:'restaurant',to:'lobby'},
-    {from:'kitchen',to:'restaurant'},
-    {from:'service',to:'lobby'},
-    {from:'technical',to:'service'},
-    {from:'warehouse',to:'service'},
-    {from:'spa',to:'service'},
-    {from:'gym',to:'spa'},
-    {from:'elevators',to:'reception'},
-    {from:'entrance',to:'lobby'},
+    {from:'reception',to:'lobby',via:[{x:3,y:-.2},{x:3,y:.6}]},
+    {from:'bar',to:'lobby',via:[{x:-.3,y:1.8},{x:.7,y:1.8}]},
+    {from:'congress',to:'lobby',via:[{x:-1.8,y:6.5},{x:-.5,y:5.2},{x:.7,y:4.4}]},
+    {from:'meeting',to:'lobby',via:[{x:1.2,y:6.3},{x:1.5,y:5.3}]},
+    {from:'restaurant',to:'lobby',via:[{x:7.3,y:1.8},{x:6.3,y:1.8}]},
+    {from:'kitchen',to:'restaurant',via:[{x:11.2,y:5.5},{x:10.5,y:4.6}]},
+    {from:'service',to:'lobby',via:[{x:7.1,y:8.1},{x:6.4,y:7.2},{x:5.2,y:6.2}]},
+    {from:'technical',to:'service',via:[{x:5.1,y:13.1},{x:5.5,y:12.2}]},
+    {from:'warehouse',to:'service',via:[{x:10,y:13.1},{x:9.6,y:12.2}]},
+    {from:'spa',to:'service',via:[{x:12.1,y:11},{x:11.2,y:10.8},{x:10.5,y:10.8}]},
+    {from:'gym',to:'spa',via:[{x:14,y:14.1},{x:14,y:12.8}]},
+    {from:'elevators',to:'reception',via:[{x:3.5,y:-4.1},{x:3.5,y:-3.2}]},
+    {from:'entrance',to:'lobby',via:[{x:3.5,y:7.1},{x:3.5,y:5.7}]},
   ]
 }
 
@@ -48,20 +61,27 @@ const themes={
   gym:{floor:'rubber',wall:'service'},
   elevator:{floor:'marble',wall:'hotel'},
   entrance:{floor:'stone',wall:'hotel'},
+  corridor:{floor:'corridor',wall:'hotel'},
 }
 export const roomById=id=>ISO_WORLD.rooms.find(r=>r.id===id)||ISO_WORLD.rooms[0]
 export const themeFor=r=>themes[r.theme]||themes.lobby
 
-export function tilesForRoom(room){
+export function tilesForRect(r){
   const out=[]
-  for(let y=room.y;y<room.y+room.h;y++)for(let x=room.x;x<room.x+room.w;x++)out.push({x,y,roomId:room.id})
+  for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++)out.push({x,y,roomId:r.id,kind:r.theme==='corridor'?'corridor':'room'})
   return out
 }
+export const tilesForRoom=tilesForRect
 
 export function allTiles(){
   const seen=new Map()
-  for(const room of ISO_WORLD.rooms)for(const t of tilesForRoom(room))seen.set(`${t.x},${t.y}`,t)
+  for(const corridor of ISO_WORLD.corridors)for(const t of tilesForRect(corridor))seen.set(`${t.x},${t.y}`,t)
+  for(const room of ISO_WORLD.rooms)for(const t of tilesForRect(room))seen.set(`${t.x},${t.y}`,t)
   return [...seen.values()]
+}
+
+export function connectorByRooms(a,b){
+  return ISO_WORLD.connectors.find(c=>(c.from===a&&c.to===b)||(c.from===b&&c.to===a))
 }
 
 export function routeZones(fromId,toId){
@@ -79,5 +99,12 @@ export function routeZones(fromId,toId){
     if(last===toId){chain=p;break}
     for(const n of graph.get(last)||[])if(!seen.has(n)){seen.add(n);q.push([...p,n])}
   }
-  return (chain||[fromId,toId]).slice(1).map(id=>roomById(id).anchor)
+  const rooms=chain||[fromId,toId]
+  const points=[]
+  for(let i=0;i<rooms.length-1;i++){
+    const c=connectorByRooms(rooms[i],rooms[i+1])
+    if(c?.via?.length)points.push(...(c.from===rooms[i]?c.via:[...c.via].reverse()))
+    points.push(roomById(rooms[i+1]).anchor)
+  }
+  return points
 }
