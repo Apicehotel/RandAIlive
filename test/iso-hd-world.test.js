@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { gridToScreen, screenToGrid, ISO_TILE_W, ISO_TILE_H } from '../src/iso/iso-math.js'
 import { floorTexture } from '../src/iso/iso-textures.js'
+import { propLayoutFor } from '../src/iso/iso-props.js'
 import { ISO_MAPS, ISO_WORLD, allTiles, destinationForZone, isStepWalkable, roomById, routeAreas, tilesForRoom } from '../src/iso/iso-world.js'
 
 test('isometric projection uses HD 2:1 tiles and round-trips',()=>{
@@ -47,4 +48,12 @@ test('Jazz and Wine are eight separate elevator maps',()=>{
     assert.deepEqual(destinationForZone(id),{mapId:id,areaId:'floor-lounge'})
     assert.equal(roomById('elevators',id).label,'ASCENSORI')
   }
+})
+
+test('Jazz furniture is modern while Wine uses cellar and arte povera pieces',()=>{
+  const jazzTypes=new Set(propLayoutFor(ISO_MAPS.find(map=>map.id==='jazz1')).map(([type])=>type))
+  const wineTypes=new Set(propLayoutFor(ISO_MAPS.find(map=>map.id==='wine5')).map(([type])=>type))
+  for(const type of ['jazzBed','jazzWardrobe','jazzDesk','sculpture'])assert.ok(jazzTypes.has(type),type)
+  for(const type of ['wineBed','wineWardrobe','wineDesk','barrel','bottleRack'])assert.ok(wineTypes.has(type),type)
+  assert.ok(!jazzTypes.has('barrel'));assert.ok(!wineTypes.has('sculpture'))
 })

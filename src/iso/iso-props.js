@@ -11,6 +11,10 @@ const P={
   dark:{top:0x43505a,left:0x222c34,right:0x303b44,edge:0x12191f,hi:0x70808a},
   green:{top:0x6f9f70,left:0x3f6f49,right:0x51865b,edge:0x274a31,hi:0x9ac99a},
   blue:{top:0x4d7299,left:0x2c4865,right:0x3a5d7e,edge:0x1c3145,hi:0x739dc5},
+  glass:{top:0xbfd9dc,left:0x657b82,right:0x82999e,edge:0x33464d,hi:0xecffff},
+  linen:{top:0xd8d4ca,left:0x98958d,right:0xb8b4aa,edge:0x65625c,hi:0xf4f1e9},
+  burgundy:{top:0x71414a,left:0x45272d,right:0x593239,edge:0x29171b,hi:0xa36a73},
+  iron:{top:0x525557,left:0x292d30,right:0x3a3e40,edge:0x151819,hi:0x777b7d},
 }
 
 function shadow(g,x,y,w,h,alpha=.24){g.fillStyle(0x071016,alpha).fillEllipse(x+8,y+7,w,h)}
@@ -90,6 +94,55 @@ function bed(g,x,y,m=P.blue){
 }
 function wardrobe(g,x,y,m=P.walnut){shadow(g,x,y,49,15);prism(g,x,y,22,13,55,m);g.fillStyle(P.gold.top,1).fillCircle(x+8,y-25,2)}
 function desk(g,x,y){shadow(g,x,y,51,16);leg(g,x-15,y+5,22);leg(g,x+15,y+5,22);prism(g,x,y,23,14,6,P.oak);screen(g,x+3,y-8)}
+function jazzBed(g,x,y){
+  shadow(g,x,y,86,25);prism(g,x,y,39,23,10,P.dark);prism(g,x,y-10,37,22,10,P.linen)
+  prism(g,x,y-17,36,20,5,P.blue);prism(g,x-19,y-20,14,10,6,P.cream);prism(g,x+12,y-14,14,10,6,P.cream)
+  prism(g,x-34,y-19,4,21,32,P.steel);g.lineStyle(2,P.glass.hi,.25).lineBetween(x-30,y-47,x-4,y-35)
+}
+function wineBed(g,x,y){
+  shadow(g,x,y,88,27);prism(g,x,y,40,24,18,P.walnut);prism(g,x,y-15,36,21,9,P.cream);prism(g,x,y-18,34,19,5,P.burgundy)
+  prism(g,x-35,y-19,6,22,39,P.walnut);g.lineStyle(3,P.oak.hi,.34).lineBetween(x-29,y-50,x-4,y-38)
+  prism(g,x-18,y-23,14,10,6,P.linen);prism(g,x+12,y-17,14,10,6,P.linen)
+}
+function jazzWardrobe(g,x,y){
+  shadow(g,x,y,52,15);prism(g,x,y,23,13,53,P.linen)
+  g.lineStyle(2,P.steel.edge,.45).lineBetween(x,y-48,x,y+3);g.lineStyle(1,P.glass.hi,.45).lineBetween(x-16,y-43,x-3,y-37)
+  g.fillStyle(P.dark.top,.9).fillRect(x-2,y-25,2,9)
+}
+function wineWardrobe(g,x,y){
+  shadow(g,x,y,54,16);prism(g,x,y,24,14,58,P.walnut);prism(g,x,y-57,25,15,5,P.oak)
+  g.lineStyle(2,P.walnut.edge,.48).lineBetween(x,y-50,x,y+4)
+  for(const dx of [-10,10]){g.lineStyle(1,P.oak.hi,.3).strokeRect(x+dx-6,y-44,12,24);g.fillStyle(P.iron.top,1).fillCircle(x+dx/2,y-24,2)}
+}
+function jazzDesk(g,x,y){
+  shadow(g,x,y,55,16);leg(g,x-17,y+5,21,P.steel);leg(g,x+17,y+5,21,P.steel);prism(g,x,y,25,14,5,P.glass);screen(g,x+5,y-9)
+}
+function wineDesk(g,x,y){
+  shadow(g,x,y,58,18);leg(g,x-18,y+6,25,P.walnut);leg(g,x+18,y+6,25,P.walnut);prism(g,x,y,27,16,7,P.oak)
+  g.fillStyle(P.burgundy.top,.85).fillPoints([{x:x-8,y:y-13},{x:x+3,y:y-8},{x:x+13,y:y-13},{x:x+2,y:y-18}],true)
+  g.lineStyle(2,P.gold.top,.72).lineBetween(x+15,y-12,x+15,y-33);g.fillStyle(0xffdf9a,.65).fillCircle(x+15,y-35,5)
+}
+function jazzSofa(g,x,y){sofa(g,x,y,P.blue);g.lineStyle(2,P.glass.hi,.18).lineBetween(x-22,y-25,x+20,y-5)}
+function wineBench(g,x,y){
+  shadow(g,x,y,78,25);prism(g,x,y,34,23,15,P.walnut);prism(g,x,y-16,31,16,24,P.walnut);prism(g,x,y-14,28,13,7,P.burgundy)
+  g.lineStyle(2,P.oak.hi,.3).lineBetween(x-24,y-34,x+20,y-13)
+}
+function jazzTable(g,x,y){shadow(g,x,y,58,18);leg(g,x,y+8,19,P.steel);prism(g,x,y,28,18,5,P.glass)}
+function wineTable(g,x,y){shadow(g,x,y,61,20);for(const dx of [-14,14])leg(g,x+dx,y+7,22,P.walnut);prism(g,x,y,29,19,8,P.oak)}
+function sculpture(g,x,y){
+  shadow(g,x,y,31,12,.16);prism(g,x,y,10,9,26,P.linen)
+  g.fillStyle(P.steel.top,1).fillPoints([{x:x-8,y:y-44},{x:x+2,y:y-57},{x:x+11,y:y-46},{x:x+3,y:y-37}],true)
+  g.lineStyle(2,P.glass.hi,.4).strokePoints([{x:x-8,y:y-44},{x:x+2,y:y-57},{x:x+11,y:y-46},{x:x+3,y:y-37}],true)
+}
+function barrel(g,x,y){
+  shadow(g,x,y,40,15,.2);g.fillStyle(P.walnut.left,1).fillEllipse(x,y-22,33,23);g.fillStyle(P.walnut.right,1).fillRect(x-16,y-22,32,27);g.fillStyle(P.oak.top,1).fillEllipse(x,y-22,33,17)
+  for(const yy of [y-18,y-4])g.lineStyle(3,P.iron.top,.85).strokeEllipse(x,yy,34,12)
+  g.lineStyle(2,P.walnut.edge,.6).lineBetween(x,y-29,x,y+3)
+}
+function bottleRack(g,x,y){
+  shelf(g,x,y,P.walnut)
+  for(const py of [y-34,y-19])for(const dx of [-13,0,13]){g.fillStyle(0x284735,1).fillRect(x+dx-2,py,4,10);g.fillStyle(0xb59a70,.8).fillCircle(x+dx,py,2)}
+}
 function elevatorDoors(g,x,y,accent=0xd4ad5f){
   shadow(g,x,y,105,20,.18);prism(g,x,y,48,12,64,P.dark)
   const left=[{x:x-36,y:y-58},{x,y:y-41},{x,y:y+3},{x:x-36,y:y-14}]
@@ -99,7 +152,7 @@ function elevatorDoors(g,x,y,accent=0xd4ad5f){
   g.lineStyle(2,0xdce6e7,.35).lineBetween(x,y-40,x,y+2)
 }
 
-const DRAW={sofa,coffeeTable,diningTable,chair,receptionDesk,barCounter,plant,lamp,screen,trolley,luggage,shelf,crate,kitchenUnit,washer,workbench,spaBed,treadmill,bed,wardrobe,desk,elevatorDoors}
+const DRAW={sofa,coffeeTable,diningTable,chair,receptionDesk,barCounter,plant,lamp,screen,trolley,luggage,shelf,crate,kitchenUnit,washer,workbench,spaBed,treadmill,bed,wardrobe,desk,jazzBed,wineBed,jazzWardrobe,wineWardrobe,jazzDesk,wineDesk,jazzSofa,wineBench,jazzTable,wineTable,sculpture,barrel,bottleRack,elevatorDoors}
 
 const groundProps=[
   ['elevatorDoors',18.5,4.1],['receptionDesk',11.7,5.4],['receptionDesk',13.3,5.4],['screen',10.4,4.2],['luggage',14.2,5.8],['plant',9.5,5.7],
@@ -118,13 +171,19 @@ const groundProps=[
 ]
 
 function guestProps(map){
-  const items=[['elevatorDoors',13,2.1],['sofa',12,10],['coffeeTable',13.4,11],['plant',14.2,9.1],['lamp',12.8,12]]
+  const jazz=map.theme==='jazz'
+  const items=jazz
+    ?[['elevatorDoors',13,2.1],['jazzSofa',12,10],['jazzTable',13.4,11],['plant',14.2,9.1],['sculpture',12.8,12]]
+    :[['elevatorDoors',13,2.1],['wineBench',12,10],['wineTable',13.4,11],['barrel',14.2,9.2],['bottleRack',12.8,12]]
   for(const a of map.areas.filter(v=>v.id.startsWith('room-'))){
-    items.push(['bed',a.anchor.x-.6,a.anchor.y+.4,map.theme==='wine'?P.red:P.blue])
-    items.push(['wardrobe',a.anchor.x+1.3,a.anchor.y-1,map.theme==='wine'?P.walnut:P.oak])
-    items.push(['desk',a.anchor.x-1.4,a.anchor.y-1])
+    items.push([jazz?'jazzBed':'wineBed',a.anchor.x-.6,a.anchor.y+.4])
+    items.push([jazz?'jazzWardrobe':'wineWardrobe',a.anchor.x+1.3,a.anchor.y-1])
+    items.push([jazz?'jazzDesk':'wineDesk',a.anchor.x-1.4,a.anchor.y-1])
   }
-  for(const a of map.areas.filter(v=>v.id.startsWith('office-'))){items.push(['shelf',a.anchor.x,a.anchor.y-.5],['trolley',a.anchor.x,a.anchor.y+.8])}
+  for(const a of map.areas.filter(v=>v.id.startsWith('office-'))){
+    if(jazz)items.push(['shelf',a.anchor.x,a.anchor.y-.5],['trolley',a.anchor.x,a.anchor.y+.8])
+    else items.push(['bottleRack',a.anchor.x,a.anchor.y-.5],['crate',a.anchor.x,a.anchor.y+.8,P.walnut])
+  }
   return items
 }
 
